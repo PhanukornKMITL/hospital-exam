@@ -30,8 +30,9 @@ type StaffCreateInput struct {
 }
 
 type StaffLoginInput struct {
-	Username string
-	Password string
+	Username   string
+	Password   string
+	HospitalID uuid.UUID
 }
 
 func NewStaffService(repo repository.StaffRepository) StaffService {
@@ -43,6 +44,15 @@ func (s *staffService) GetStaffs() ([]entity.Staff, error) {
 }
 
 func (s *staffService) CreateStaff(input StaffCreateInput) (*entity.Staff, error) {
+	// Check duplicate username within the same hospital in app layer
+	exists, err := s.repo.ExistsByUsernameInHospital(input.HospitalID, input.Username)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, errors.New("username already exists in this hospital")
+	}
+
 	hashed, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
@@ -61,7 +71,8 @@ func (s *staffService) DeleteStaff(id uuid.UUID) error {
 }
 
 func (s *staffService) Login(input StaffLoginInput) (string, error) {
-	staff, err := s.repo.FindByUsername(input.Username)
+	// Require hospitalId to disambiguate same usernames across hospitals
+	staff, err := s.repo.FindByHospitalAndUsername(input.HospitalID, input.Username)
 	if err != nil {
 		return "", errors.New("invalid credentials")
 	}

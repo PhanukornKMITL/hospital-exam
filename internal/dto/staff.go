@@ -16,8 +16,9 @@ type CreateStaffRequest struct {
 
 // LoginStaffRequest defines input for staff login.
 type LoginStaffRequest struct {
-    Username string `json:"username" binding:"required"`
-    Password string `json:"password" binding:"required"`
+    Username   string    `json:"username" binding:"required"`
+    Password   string    `json:"password" binding:"required"`
+    HospitalID uuid.UUID `json:"hospitalId" binding:"required"`
 }
 
 // StaffResponse represents staff data returned to clients.

@@ -60,8 +60,9 @@ func (s *StaffController) Login(c *gin.Context) {
 	}
 
 	token, err := s.service.Login(service.StaffLoginInput{
-		Username: req.Username,
-		Password: req.Password,
+		Username:   req.Username,
+		Password:   req.Password,
+		HospitalID: req.HospitalID,
 	})
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
