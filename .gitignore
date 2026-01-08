@@ -1,0 +1,31 @@
+# Go binaries and build outputs
+/app
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+dist/
+
+# Coverage and logs
+coverage*/
+coverage.*
+*.log
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+
+# Editor/OS noise
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Vendored deps (if you choose to vendor)
+vendor/
