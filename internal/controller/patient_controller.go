@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"errors"
+	"io"
 	"net/http"
 	"time"
 
@@ -125,6 +127,68 @@ func (p *PatientController) SearchPatient(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, toPatientResponse(*patient))
+}
+
+// SearchPatients handles POST /patient/search with filter DTO and pagination.
+func (p *PatientController) SearchPatients(c *gin.Context) {
+	var req dto.SearchPatientRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// If body is empty (EOF), treat as no filters provided
+		if !errors.Is(err, io.EOF) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		// proceed with zero-value req (no filters)
+	}
+
+	hospitalIDStr, exists := c.Get("hospitalId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "hospitalId not found in token"})
+		return
+	}
+
+	hospitalID, err := uuid.Parse(hospitalIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hospitalId format"})
+		return
+	}
+
+	var dob *time.Time
+	if req.DateOfBirth != nil && *req.DateOfBirth != "" {
+		parsed, err := time.Parse("2006-01-02", *req.DateOfBirth)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid dateOfBirth format, expected YYYY-MM-DD"})
+			return
+		}
+		dob = &parsed
+	}
+
+	patients, total, err := p.service.SearchPatients(hospitalID, service.PatientSearchInput{
+		PatientHN:    req.PatientHN,
+		FirstNameTH:  req.FirstNameTH,
+		MiddleNameTH: req.MiddleNameTH,
+		LastNameTH:   req.LastNameTH,
+		FirstNameEN:  req.FirstNameEN,
+		MiddleNameEN: req.MiddleNameEN,
+		LastNameEN:   req.LastNameEN,
+		DateOfBirth:  dob,
+		NationalID:   req.NationalID,
+		PassportID:   req.PassportID,
+		PhoneNumber:  req.PhoneNumber,
+		Email:        req.Email,
+		Gender:       req.Gender,
+	}, req.Page, req.Limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.PaginatedPatientsResponse{
+		Data:  toPatientResponses(patients),
+		Page:  req.Page,
+		Limit: req.Limit,
+		Total: total,
+	})
 }
 
 func toPatientResponse(p entity.Patient) dto.PatientResponse {

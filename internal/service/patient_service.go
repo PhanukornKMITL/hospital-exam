@@ -15,6 +15,7 @@ type PatientService interface {
 	GetPatientsByHospital(hospitalID uuid.UUID) ([]entity.Patient, error)
 	CreatePatient(input PatientCreateInput) (*entity.Patient, error)
 	SearchPatientByIdentifier(hospitalID uuid.UUID, identifier string) (*entity.Patient, error)
+	SearchPatients(hospitalID uuid.UUID, input PatientSearchInput, page, limit int) ([]entity.Patient, int64, error)
 }
 
 type patientService struct {
@@ -53,8 +54,8 @@ func (s *patientService) GetPatientsByHospital(hospitalID uuid.UUID) ([]entity.P
 }
 
 func (s *patientService) CreatePatient(input PatientCreateInput) (*entity.Patient, error) {
-		// Log hospitalId from token for debugging
-		println("[DEBUG] CreatePatient - HospitalID from token:", input.HospitalID.String())
+	// Log hospitalId from token for debugging
+	println("[DEBUG] CreatePatient - HospitalID from token:", input.HospitalID.String())
 
 	// Check duplicate national ID in the same hospital
 	if input.NationalID != "" && strings.TrimSpace(input.NationalID) != "" {
@@ -102,6 +103,65 @@ func (s *patientService) SearchPatientByIdentifier(hospitalID uuid.UUID, identif
 		return nil, errors.New("identifier is required")
 	}
 	return s.repo.FindByHospitalAndIdentifier(hospitalID, id)
+}
+
+type PatientSearchInput struct {
+	PatientHN    string
+	FirstNameTH  string
+	MiddleNameTH string
+	LastNameTH   string
+
+	FirstNameEN  string
+	MiddleNameEN string
+	LastNameEN   string
+
+	DateOfBirth *time.Time
+
+	NationalID  string
+	PassportID  string
+	PhoneNumber string
+	Email       string
+	Gender      string
+}
+
+func (s *patientService) SearchPatients(hospitalID uuid.UUID, input PatientSearchInput, page, limit int) ([]entity.Patient, int64, error) {
+	toPtr := func(s string) *string {
+		if strings.TrimSpace(s) == "" {
+			return nil
+		}
+		v := strings.TrimSpace(s)
+		return &v
+	}
+
+	filters := repository.PatientSearchFilters{
+		PatientHN:    toPtr(input.PatientHN),
+		FirstNameTH:  toPtr(input.FirstNameTH),
+		MiddleNameTH: toPtr(input.MiddleNameTH),
+		LastNameTH:   toPtr(input.LastNameTH),
+		FirstNameEN:  toPtr(input.FirstNameEN),
+		MiddleNameEN: toPtr(input.MiddleNameEN),
+		LastNameEN:   toPtr(input.LastNameEN),
+		DateOfBirth:  input.DateOfBirth,
+		NationalID:   toPtr(input.NationalID),
+		PassportID:   toPtr(input.PassportID),
+		PhoneNumber:  toPtr(input.PhoneNumber),
+		Email:        toPtr(input.Email),
+		Gender:       toPtr(input.Gender),
+	}
+
+	// Defaults for pagination
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	patients, total, err := s.repo.FindByHospitalWithFilters(hospitalID, filters, page, limit)
+	return patients, total, err
 }
 
 // normalizeOptionalPtr trims and returns nil if empty/whitespace, else pointer.

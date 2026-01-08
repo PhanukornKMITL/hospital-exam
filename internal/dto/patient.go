@@ -49,3 +49,34 @@ type PatientResponse struct {
 
 	CreatedAt time.Time `json:"createdAt"`
 }
+
+// SearchPatientRequest defines filterable fields and pagination for patient search.
+// All fields are optional; empty values are ignored.
+type SearchPatientRequest struct {
+	PatientHN    string `json:"patientHN"`
+	FirstNameTH  string `json:"firstNameTH"`
+	MiddleNameTH string `json:"middleNameTH"`
+	LastNameTH   string `json:"lastNameTH"`
+
+	FirstNameEN  string `json:"firstNameEN"`
+	MiddleNameEN string `json:"middleNameEN"`
+	LastNameEN   string `json:"lastNameEN"`
+
+	DateOfBirth *string `json:"dateOfBirth"` // YYYY-MM-DD
+
+	NationalID  string `json:"nationalId"`
+	PassportID  string `json:"passportId"`
+	PhoneNumber string `json:"phoneNumber"`
+	Email       string `json:"email"`
+	Gender      string `json:"gender"`
+
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
+}
+
+type PaginatedPatientsResponse struct {
+	Data  []PatientResponse `json:"data"`
+	Page  int               `json:"page"`
+	Limit int               `json:"limit"`
+	Total int64             `json:"total"`
+}
