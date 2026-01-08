@@ -8,9 +8,9 @@ import (
 
 type Patient struct {
 	ID         uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	HospitalID uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:uni_patients_hospital_nid;uniqueIndex:uni_patients_hospital_pid"`
+	HospitalID uuid.UUID `gorm:"type:uuid;not null"`
 
-	PatientHN string `gorm:"unique;not null"`
+	PatientHN string `gorm:"not null"`
 
 	FirstNameTH  string
 	MiddleNameTH string
@@ -22,8 +22,8 @@ type Patient struct {
 
 	DateOfBirth *time.Time
 
-	NationalID *string `gorm:"uniqueIndex:uni_patients_hospital_nid"`
-	PassportID *string `gorm:"uniqueIndex:uni_patients_hospital_pid"`
+	NationalID *string
+	PassportID *string
 
 	PhoneNumber string
 	Email       string

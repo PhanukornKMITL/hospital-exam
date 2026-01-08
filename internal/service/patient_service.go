@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -51,6 +52,31 @@ func (s *patientService) GetPatientsByHospital(hospitalID uuid.UUID) ([]entity.P
 }
 
 func (s *patientService) CreatePatient(input PatientCreateInput) (*entity.Patient, error) {
+		// Log hospitalId from token for debugging
+		println("[DEBUG] CreatePatient - HospitalID from token:", input.HospitalID.String())
+
+	// Check duplicate national ID in the same hospital
+	if input.NationalID != "" && strings.TrimSpace(input.NationalID) != "" {
+		exists, err := s.repo.ExistsByNationalIDInHospital(input.HospitalID, strings.TrimSpace(input.NationalID))
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, errors.New("nationalId already exists in this hospital")
+		}
+	}
+
+	// Check duplicate passport ID in the same hospital
+	if input.PassportID != "" && strings.TrimSpace(input.PassportID) != "" {
+		exists, err := s.repo.ExistsByPassportIDInHospital(input.HospitalID, strings.TrimSpace(input.PassportID))
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, errors.New("passportId already exists in this hospital")
+		}
+	}
+
 	patient := &entity.Patient{
 		HospitalID:   input.HospitalID,
 		FirstNameTH:  input.FirstNameTH,

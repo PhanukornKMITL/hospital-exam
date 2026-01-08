@@ -16,6 +16,8 @@ type PatientRepository interface {
 	Create(patient *entity.Patient) (*entity.Patient, error)
 	CreateWithGeneratedHN(patient *entity.Patient) (*entity.Patient, error)
 	FindByID(id uuid.UUID) (*entity.Patient, error)
+	ExistsByNationalIDInHospital(hospitalID uuid.UUID, nationalID string) (bool, error)
+	ExistsByPassportIDInHospital(hospitalID uuid.UUID, passportID string) (bool, error)
 }
 
 type patientRepository struct {
@@ -78,4 +80,16 @@ func (r *patientRepository) FindByID(id uuid.UUID) (*entity.Patient, error) {
 		return nil, err
 	}
 	return &patient, nil
+}
+
+func (r *patientRepository) ExistsByNationalIDInHospital(hospitalID uuid.UUID, nationalID string) (bool, error) {
+	var count int64
+	err := r.db.Model(&entity.Patient{}).Where("hospital_id = ? AND national_id = ?", hospitalID, nationalID).Count(&count).Error
+	return count > 0, err
+}
+
+func (r *patientRepository) ExistsByPassportIDInHospital(hospitalID uuid.UUID, passportID string) (bool, error) {
+	var count int64
+	err := r.db.Model(&entity.Patient{}).Where("hospital_id = ? AND passport_id = ?", hospitalID, passportID).Count(&count).Error
+	return count > 0, err
 }
