@@ -22,6 +22,18 @@ func NewPatientController(service service.PatientService) *PatientController {
 	return &PatientController{service: service}
 }
 
+// GetPatients godoc
+// @Summary Get patients by hospital
+// @Description Retrieve all patients for the authenticated staff's hospital
+// @Tags patients
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} dto.PatientResponse
+// @Failure 401 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /patients [get]
 func (p *PatientController) GetPatients(c *gin.Context) {
 	hospitalIDStr, exists := c.Get("hospitalId")
 	if !exists {
@@ -43,6 +55,19 @@ func (p *PatientController) GetPatients(c *gin.Context) {
 	c.JSON(http.StatusOK, toPatientResponses(patients))
 }
 
+// CreatePatient godoc
+// @Summary Create a new patient
+// @Description Register a new patient to the authenticated staff's hospital
+// @Tags patients
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreatePatientRequest true "Patient details"
+// @Success 201 {object} dto.PatientResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /patients [post]
 func (p *PatientController) CreatePatient(c *gin.Context) {
 	var req dto.CreatePatientRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

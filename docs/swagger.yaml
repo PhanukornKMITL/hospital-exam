@@ -1,0 +1,386 @@
+basePath: /
+definitions:
+  dto.CreateHospitalRequest:
+    properties:
+      address:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreatePatientRequest:
+    properties:
+      dateOfBirth:
+        description: 'expected format: YYYY-MM-DD'
+        type: string
+      email:
+        type: string
+      firstNameEN:
+        type: string
+      firstNameTH:
+        type: string
+      gender:
+        type: string
+      lastNameEN:
+        type: string
+      lastNameTH:
+        type: string
+      middleNameEN:
+        type: string
+      middleNameTH:
+        type: string
+      nationalId:
+        type: string
+      passportId:
+        type: string
+      phoneNumber:
+        type: string
+    required:
+    - dateOfBirth
+    - firstNameEN
+    - firstNameTH
+    - gender
+    - lastNameEN
+    - lastNameTH
+    - phoneNumber
+    type: object
+  dto.CreateStaffRequest:
+    properties:
+      confirmPassword:
+        type: string
+      hospitalId:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - confirmPassword
+    - hospitalId
+    - password
+    - username
+    type: object
+  dto.HospitalResponse:
+    properties:
+      address:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  dto.LoginStaffRequest:
+    properties:
+      hospitalId:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - hospitalId
+    - password
+    - username
+    type: object
+  dto.PatientResponse:
+    properties:
+      createdAt:
+        type: string
+      dateOfBirth:
+        type: string
+      email:
+        type: string
+      firstNameEN:
+        type: string
+      firstNameTH:
+        type: string
+      gender:
+        type: string
+      hospitalId:
+        type: string
+      id:
+        type: string
+      lastNameEN:
+        type: string
+      lastNameTH:
+        type: string
+      middleNameEN:
+        type: string
+      middleNameTH:
+        type: string
+      nationalId:
+        type: string
+      passportId:
+        type: string
+      patientHN:
+        type: string
+      phoneNumber:
+        type: string
+    type: object
+  dto.StaffLoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  dto.StaffResponse:
+    properties:
+      createdAt:
+        type: string
+      hospitalId:
+        type: string
+      id:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost
+info:
+  contact:
+    email: support@hospital.com
+    name: API Support
+  description: API for Hospital Middleware System - Patient Information Search
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Hospital Middleware API
+  version: "1.0"
+paths:
+  /hospital:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all hospitals in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.HospitalResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all hospitals
+      tags:
+      - hospitals
+    post:
+      consumes:
+      - application/json
+      description: Register a new hospital in the system
+      parameters:
+      - description: Hospital details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateHospitalRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.HospitalResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new hospital
+      tags:
+      - hospitals
+  /patients:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all patients for the authenticated staff's hospital
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PatientResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get patients by hospital
+      tags:
+      - patients
+    post:
+      consumes:
+      - application/json
+      description: Register a new patient to the authenticated staff's hospital
+      parameters:
+      - description: Patient details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePatientRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.PatientResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new patient
+      tags:
+      - patients
+  /staffs:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all staff members
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.StaffResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all staffs
+      tags:
+      - staffs
+    post:
+      consumes:
+      - application/json
+      description: Create a new staff member with credentials
+      parameters:
+      - description: Staff creation details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateStaffRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.StaffResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new staff
+      tags:
+      - staffs
+  /staffs/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate staff and receive JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginStaffRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.StaffLoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Staff login
+      tags:
+      - auth
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

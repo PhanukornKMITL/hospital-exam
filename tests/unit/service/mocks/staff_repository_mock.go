@@ -49,6 +49,12 @@ func (m *MockStaffRepository) Create(staff *entity.Staff) (*entity.Staff, error)
 	if m.staffs == nil {
 		m.staffs = make(map[string]*entity.Staff)
 	}
+	
+	// สร้าง ID ให้ staff (เหมือน database auto-generate)
+	if staff.ID == uuid.Nil {
+		staff.ID = uuid.New()
+	}
+	
 	m.staffs[staff.ID.String()] = staff
 	return staff, nil
 }

@@ -18,6 +18,15 @@ func NewStaffController(service service.StaffService) *StaffController {
 	return &StaffController{service: service}
 }
 
+// GetStaffs godoc
+// @Summary Get all staffs
+// @Description Retrieve all staff members
+// @Tags staffs
+// @Accept json
+// @Produce json
+// @Success 200 {array} dto.StaffResponse
+// @Failure 500 {object} map[string]string
+// @Router /staffs [get]
 func (s *StaffController) GetStaffs(c *gin.Context) {
 	staffs, err := s.service.GetStaffs()
 	if err != nil {
@@ -27,6 +36,17 @@ func (s *StaffController) GetStaffs(c *gin.Context) {
 	c.JSON(http.StatusOK, toStaffResponses(staffs))
 }
 
+// CreateStaff godoc
+// @Summary Create a new staff
+// @Description Create a new staff member with credentials
+// @Tags staffs
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateStaffRequest true "Staff creation details"
+// @Success 201 {object} dto.StaffResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /staffs [post]
 func (s *StaffController) CreateStaff(c *gin.Context) {
 	var req dto.CreateStaffRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -52,6 +72,17 @@ func (s *StaffController) CreateStaff(c *gin.Context) {
 	c.JSON(http.StatusCreated, toStaffResponse(*staff))
 }
 
+// Login godoc
+// @Summary Staff login
+// @Description Authenticate staff and receive JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param credentials body dto.LoginStaffRequest true "Login credentials"
+// @Success 200 {object} dto.StaffLoginResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /staffs/login [post]
 func (s *StaffController) Login(c *gin.Context) {
 	var req dto.LoginStaffRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -61,6 +92,17 @@ func (s *StaffController) Login(c *gin.Context) {
 
 	token, err := s.service.Login(service.StaffLoginInput{
 		Username:   req.Username,
+// DeleteStaff godoc
+// @Summary Delete a staff
+// @Description Delete staff member by ID
+// @Tags staffs
+// @Accept json
+// @Produce json
+// @Param id path string true "Staff ID (UUID)"
+// @Success 204
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /staffs/{id} [delete]
 		Password:   req.Password,
 		HospitalID: req.HospitalID,
 	})

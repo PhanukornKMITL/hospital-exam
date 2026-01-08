@@ -12,7 +12,7 @@ import (
 
 // Test 1: Create staff successfully
 func TestCreateStaffSuccess(t *testing.T) {
-	// Arrange
+	
 	mockRepo := mocks.NewMockStaffRepository()
 	svc := service.NewStaffService(mockRepo)
 
