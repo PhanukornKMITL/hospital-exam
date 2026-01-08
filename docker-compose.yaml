@@ -14,8 +14,8 @@ services:
   api:
     build: .
     container_name: hospital-api
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     depends_on:
       - postgres
     environment:
@@ -27,6 +27,19 @@ services:
       APP_PORT: 8080
       APP_ENV: local
       APP_JWT_SECRET: verysecretkey
+
+  nginx:
+    image: nginx:alpine
+    container_name: hospital-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+    restart: unless-stopped
 
 volumes:
   postgres_data:

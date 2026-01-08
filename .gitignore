@@ -20,6 +20,11 @@ coverage.*
 .env.*
 !.env.example
 
+# SSL certificates (for local development)
+ssl/*.crt
+ssl/*.key
+ssl/*.pem
+
 # Editor/OS noise
 .vscode/
 .idea/
