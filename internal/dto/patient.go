@@ -1,0 +1,54 @@
+package dto
+
+import (
+    "time"
+
+    "github.com/google/uuid"
+)
+
+// CreatePatientRequest defines input payload for creating a patient.
+type CreatePatientRequest struct {
+    HospitalID uuid.UUID `json:"hospitalId" binding:"required"`
+    PatientHN  string    `json:"patientHN" binding:"required"`
+
+    FirstNameTH  string `json:"firstNameTH" binding:"required"`
+    MiddleNameTH string `json:"middleNameTH"`
+    LastNameTH   string `json:"lastNameTH" binding:"required"`
+
+    FirstNameEN  string `json:"firstNameEN" binding:"required"`
+    MiddleNameEN string `json:"middleNameEN"`
+    LastNameEN   string `json:"lastNameEN" binding:"required"`
+
+    DateOfBirth *string `json:"dateOfBirth" binding:"required"` // expected format: YYYY-MM-DD
+
+    NationalID  string `json:"nationalId"`
+    PassportID  string `json:"passportId"`
+    PhoneNumber string `json:"phoneNumber" binding:"required"`
+    Email       string `json:"email"`
+    Gender      string `json:"gender" binding:"required"`
+}
+
+// PatientResponse represents patient data returned to clients.
+type PatientResponse struct {
+    ID         uuid.UUID `json:"id"`
+    HospitalID uuid.UUID `json:"hospitalId"`
+    PatientHN  string    `json:"patientHN"`
+
+    FirstNameTH  string `json:"firstNameTH"`
+    MiddleNameTH string `json:"middleNameTH"`
+    LastNameTH   string `json:"lastNameTH"`
+
+    FirstNameEN  string `json:"firstNameEN"`
+    MiddleNameEN string `json:"middleNameEN"`
+    LastNameEN   string `json:"lastNameEN"`
+
+    DateOfBirth *time.Time `json:"dateOfBirth"`
+
+    NationalID  string `json:"nationalId"`
+    PassportID  string `json:"passportId"`
+    PhoneNumber string `json:"phoneNumber"`
+    Email       string `json:"email"`
+    Gender      string `json:"gender"`
+
+    CreatedAt time.Time `json:"createdAt"`
+}

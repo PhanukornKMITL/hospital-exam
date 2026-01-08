@@ -5,28 +5,16 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/PhanukornKMITL/hospital-exam/internal/controller"
-	"github.com/PhanukornKMITL/hospital-exam/internal/service"
 	"github.com/PhanukornKMITL/hospital-exam/internal/repository"
-	"github.com/PhanukornKMITL/hospital-exam/internal/config"
+	"github.com/PhanukornKMITL/hospital-exam/internal/service"
 )
 
-// SetupRoutes สร้าง repo -> service -> controller ภายในตัว route
-func SetupRoutes(r *gin.Engine, db *gorm.DB) {
-	// สร้าง layers ของ Hospital
+func SetupHospitalRoutes(r *gin.Engine, db *gorm.DB) {
 	hospitalRepo := repository.NewHospitalRepository(db)
 	hospitalService := service.NewHospitalService(hospitalRepo)
 	hospitalController := controller.NewHospitalController(hospitalService)
 
 	// Routes ของ hospital
-	r.GET("/hospitals", hospitalController.GetHospitals)
-	r.POST("/hospitals", hospitalController.CreateHospital)
-
-	// Health check route
-	cfg := config.Load()
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status": "ok",
-			"env":    cfg.AppEnv,
-		})
-	})
+	r.GET("/hospital", hospitalController.GetHospitals)
+	r.POST("/hospital", hospitalController.CreateHospital)
 }

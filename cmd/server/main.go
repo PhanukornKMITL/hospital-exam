@@ -29,7 +29,10 @@ func main() {
 
 	r := gin.Default()
 
-	route.SetupRoutes(r, db)
+	route.SetupHospitalRoutes(r, db)
+	route.SetupStaffRoutes(r, db)
+	route.SetupPatientRoutes(r, db)
+	route.SetupHealthRoute(r)
 
 	r.Run(":" + cfg.AppPort)
 }
