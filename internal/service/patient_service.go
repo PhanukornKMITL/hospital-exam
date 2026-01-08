@@ -14,6 +14,7 @@ type PatientService interface {
 	GetPatients() ([]entity.Patient, error)
 	GetPatientsByHospital(hospitalID uuid.UUID) ([]entity.Patient, error)
 	CreatePatient(input PatientCreateInput) (*entity.Patient, error)
+	SearchPatientByIdentifier(hospitalID uuid.UUID, identifier string) (*entity.Patient, error)
 }
 
 type patientService struct {
@@ -93,6 +94,14 @@ func (s *patientService) CreatePatient(input PatientCreateInput) (*entity.Patien
 		Gender:       input.Gender,
 	}
 	return s.repo.CreateWithGeneratedHN(patient)
+}
+
+func (s *patientService) SearchPatientByIdentifier(hospitalID uuid.UUID, identifier string) (*entity.Patient, error) {
+	id := strings.TrimSpace(identifier)
+	if id == "" {
+		return nil, errors.New("identifier is required")
+	}
+	return s.repo.FindByHospitalAndIdentifier(hospitalID, id)
 }
 
 // normalizeOptionalPtr trims and returns nil if empty/whitespace, else pointer.

@@ -16,6 +16,7 @@ type PatientRepository interface {
 	Create(patient *entity.Patient) (*entity.Patient, error)
 	CreateWithGeneratedHN(patient *entity.Patient) (*entity.Patient, error)
 	FindByID(id uuid.UUID) (*entity.Patient, error)
+	FindByHospitalAndIdentifier(hospitalID uuid.UUID, identifier string) (*entity.Patient, error)
 	ExistsByNationalIDInHospital(hospitalID uuid.UUID, nationalID string) (bool, error)
 	ExistsByPassportIDInHospital(hospitalID uuid.UUID, passportID string) (bool, error)
 }
@@ -77,6 +78,16 @@ func (r *patientRepository) CreateWithGeneratedHN(patient *entity.Patient) (*ent
 func (r *patientRepository) FindByID(id uuid.UUID) (*entity.Patient, error) {
 	var patient entity.Patient
 	if err := r.db.First(&patient, "id = ?", id).Error; err != nil {
+		return nil, err
+	}
+	return &patient, nil
+}
+
+// FindByHospitalAndIdentifier searches by national_id or passport_id within a hospital.
+func (r *patientRepository) FindByHospitalAndIdentifier(hospitalID uuid.UUID, identifier string) (*entity.Patient, error) {
+	var patient entity.Patient
+	err := r.db.Where("hospital_id = ? AND (national_id = ? OR passport_id = ?)", hospitalID, identifier, identifier).First(&patient).Error
+	if err != nil {
 		return nil, err
 	}
 	return &patient, nil

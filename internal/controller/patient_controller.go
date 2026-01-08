@@ -98,6 +98,35 @@ func (p *PatientController) CreatePatient(c *gin.Context) {
 	c.JSON(http.StatusCreated, toPatientResponse(*patient))
 }
 
+func (p *PatientController) SearchPatient(c *gin.Context) {
+	identifier := c.Param("id")
+
+	hospitalIDStr, exists := c.Get("hospitalId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "hospitalId not found in token"})
+		return
+	}
+
+	hospitalID, err := uuid.Parse(hospitalIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hospitalId format"})
+		return
+	}
+
+	patient, err := p.service.SearchPatientByIdentifier(hospitalID, identifier)
+	if err != nil {
+		if err.Error() == "identifier is required" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		// If not found, return 404
+		c.JSON(http.StatusNotFound, gin.H{"error": "patient not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, toPatientResponse(*patient))
+}
+
 func toPatientResponse(p entity.Patient) dto.PatientResponse {
 	return dto.PatientResponse{
 		ID:           p.ID,
