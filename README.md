@@ -14,43 +14,51 @@ git clone <repository-url>
 cd hospital-exam
 ```
 
-2. **Generate SSL certificate for local development**
-```bash
-./generate-ssl.sh
-```
-
-3. **Start all services**
+2. **Start all services**
 ```bash
 docker-compose up -d
 ```
 
-4. **Access the API**
-- HTTPS: `https://localhost`
-- HTTP: `http://localhost` (redirects to HTTPS)
+3. **Access the API**
+- HTTP (localhost): `http://localhost`
+- Swagger UI: `http://localhost/swagger/index.html`
 
-> **Note:** Browser will show SSL warning because we use self-signed certificate. Click "Proceed" or "Accept Risk" to continue.
+**That's it!** ✅ No additional setup required for localhost testing.
 
-### Optional: Use Custom Domain
+---
 
-If you want to use `https://hospital-a.api.co.th` instead of `localhost`:
+### 🔒 Optional: HTTPS with Custom Domain
 
-1. Edit `/etc/hosts` file:
+If you want to use HTTPS with a custom domain (`https://hospital-a.api.co.th`):
+
+1. **Generate SSL certificate**
 ```bash
-sudo nano /etc/hosts
+./generate-ssl.sh
 ```
 
-2. Add this line:
-```
-127.0.0.1 hospital-a.api.co.th
+2. **Add domain to hosts file**
+```bash
+echo "127.0.0.1 hospital-a.api.co.th" | sudo tee -a /etc/hosts
 ```
 
-3. Access via: `https://hospital-a.api.co.th`
+3. **Restart services**
+```bash
+docker-compose restart
+```
+
+4. **Access via HTTPS**
+- HTTPS: `https://hospital-a.api.co.th`
+- Swagger: `https://hospital-a.api.co.th/swagger/index.html`
+
+> **Note:** Browser will show SSL warning for self-signed certificate. Click "Proceed" to continue.
+
+---
 
 ## 📋 API Endpoints
 
 ### Health Check
 ```bash
-curl -k https://localhost/health
+curl http://localhost/health
 ```
 
 ### Hospitals
