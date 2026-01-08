@@ -25,7 +25,13 @@ func main() {
 		&entity.Hospital{},
 		&entity.Staff{},
 		&entity.Patient{},
+		&entity.PatientSequence{},
 	)
+
+	// Ensure composite unique indexes per hospital for patient IDs
+	if err := config.EnsurePatientIndexes(db); err != nil {
+		log.Printf("EnsurePatientIndexes error: %v", err)
+	}
 
 	r := gin.Default()
 

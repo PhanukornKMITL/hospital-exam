@@ -1,6 +1,7 @@
 package service
 
 import (
+	"strings"
 	"time"
 
 	"github.com/PhanukornKMITL/hospital-exam/internal/entity"
@@ -10,6 +11,7 @@ import (
 
 type PatientService interface {
 	GetPatients() ([]entity.Patient, error)
+	GetPatientsByHospital(hospitalID uuid.UUID) ([]entity.Patient, error)
 	CreatePatient(input PatientCreateInput) (*entity.Patient, error)
 }
 
@@ -18,9 +20,7 @@ type patientService struct {
 }
 
 type PatientCreateInput struct {
-	HospitalID uuid.UUID
-	PatientHN  string
-
+	HospitalID   uuid.UUID
 	FirstNameTH  string
 	MiddleNameTH string
 	LastNameTH   string
@@ -46,10 +46,13 @@ func (s *patientService) GetPatients() ([]entity.Patient, error) {
 	return s.repo.FindAll()
 }
 
+func (s *patientService) GetPatientsByHospital(hospitalID uuid.UUID) ([]entity.Patient, error) {
+	return s.repo.FindByHospitalID(hospitalID)
+}
+
 func (s *patientService) CreatePatient(input PatientCreateInput) (*entity.Patient, error) {
 	patient := &entity.Patient{
 		HospitalID:   input.HospitalID,
-		PatientHN:    input.PatientHN,
 		FirstNameTH:  input.FirstNameTH,
 		MiddleNameTH: input.MiddleNameTH,
 		LastNameTH:   input.LastNameTH,
@@ -57,11 +60,20 @@ func (s *patientService) CreatePatient(input PatientCreateInput) (*entity.Patien
 		MiddleNameEN: input.MiddleNameEN,
 		LastNameEN:   input.LastNameEN,
 		DateOfBirth:  input.DateOfBirth,
-		NationalID:   input.NationalID,
-		PassportID:   input.PassportID,
+		NationalID:   normalizeOptionalPtr(input.NationalID),
+		PassportID:   normalizeOptionalPtr(input.PassportID),
 		PhoneNumber:  input.PhoneNumber,
 		Email:        input.Email,
 		Gender:       input.Gender,
 	}
-	return s.repo.Create(patient)
+	return s.repo.CreateWithGeneratedHN(patient)
+}
+
+// normalizeOptionalPtr trims and returns nil if empty/whitespace, else pointer.
+func normalizeOptionalPtr(s string) *string {
+	if strings.TrimSpace(s) == "" {
+		return nil
+	}
+	v := strings.TrimSpace(s)
+	return &v
 }

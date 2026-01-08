@@ -1,14 +1,20 @@
 package repository
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/PhanukornKMITL/hospital-exam/internal/entity"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type PatientRepository interface {
 	FindAll() ([]entity.Patient, error)
+	FindByHospitalID(hospitalID uuid.UUID) ([]entity.Patient, error)
 	Create(patient *entity.Patient) (*entity.Patient, error)
+	CreateWithGeneratedHN(patient *entity.Patient) (*entity.Patient, error)
 	FindByID(id uuid.UUID) (*entity.Patient, error)
 }
 
@@ -26,9 +32,44 @@ func (r *patientRepository) FindAll() ([]entity.Patient, error) {
 	return patients, err
 }
 
+func (r *patientRepository) FindByHospitalID(hospitalID uuid.UUID) ([]entity.Patient, error) {
+	var patients []entity.Patient
+	err := r.db.Where("hospital_id = ?", hospitalID).Find(&patients).Error
+	return patients, err
+}
+
 func (r *patientRepository) Create(patient *entity.Patient) (*entity.Patient, error) {
 	err := r.db.Create(patient).Error
 	return patient, err
+}
+
+func (r *patientRepository) CreateWithGeneratedHN(patient *entity.Patient) (*entity.Patient, error) {
+	return patient, r.db.Transaction(func(tx *gorm.DB) error {
+		var seq entity.PatientSequence
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&seq, "hospital_id = ?", patient.HospitalID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				seq = entity.PatientSequence{HospitalID: patient.HospitalID, NextNumber: 1}
+				if err := tx.Create(&seq).Error; err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		}
+
+		patient.PatientHN = fmt.Sprintf("HN-%06d", seq.NextNumber)
+		seq.NextNumber++
+
+		if err := tx.Create(patient).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(&entity.PatientSequence{}).Where("hospital_id = ?", patient.HospitalID).Update("next_number", seq.NextNumber).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (r *patientRepository) FindByID(id uuid.UUID) (*entity.Patient, error) {

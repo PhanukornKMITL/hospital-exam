@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"github.com/PhanukornKMITL/hospital-exam/internal/dto"
 	"github.com/PhanukornKMITL/hospital-exam/internal/entity"
@@ -20,7 +21,19 @@ func NewPatientController(service service.PatientService) *PatientController {
 }
 
 func (p *PatientController) GetPatients(c *gin.Context) {
-	patients, err := p.service.GetPatients()
+	hospitalIDStr, exists := c.Get("hospitalId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "hospitalId not found in token"})
+		return
+	}
+
+	hospitalID, err := uuid.Parse(hospitalIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hospitalId format"})
+		return
+	}
+
+	patients, err := p.service.GetPatientsByHospital(hospitalID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -32,6 +45,18 @@ func (p *PatientController) CreatePatient(c *gin.Context) {
 	var req dto.CreatePatientRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	staffHospitalIDStr, exists := c.Get("hospitalId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "hospitalId not found in token"})
+		return
+	}
+
+	staffHospitalID, err := uuid.Parse(staffHospitalIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hospitalId format in token"})
 		return
 	}
 
@@ -51,8 +76,7 @@ func (p *PatientController) CreatePatient(c *gin.Context) {
 	}
 
 	patient, err := p.service.CreatePatient(service.PatientCreateInput{
-		HospitalID:   req.HospitalID,
-		PatientHN:    req.PatientHN,
+		HospitalID:   staffHospitalID,
 		FirstNameTH:  req.FirstNameTH,
 		MiddleNameTH: req.MiddleNameTH,
 		LastNameTH:   req.LastNameTH,
@@ -86,13 +110,20 @@ func toPatientResponse(p entity.Patient) dto.PatientResponse {
 		MiddleNameEN: p.MiddleNameEN,
 		LastNameEN:   p.LastNameEN,
 		DateOfBirth:  p.DateOfBirth,
-		NationalID:   p.NationalID,
-		PassportID:   p.PassportID,
+		NationalID:   derefString(p.NationalID),
+		PassportID:   derefString(p.PassportID),
 		PhoneNumber:  p.PhoneNumber,
 		Email:        p.Email,
 		Gender:       p.Gender,
 		CreatedAt:    p.CreatedAt,
 	}
+}
+
+func derefString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 func toPatientResponses(patients []entity.Patient) []dto.PatientResponse {
