@@ -19,7 +19,6 @@ func TestGetHospitalsSuccess_Empty(t *testing.T) {
 		t.Errorf("GetHospitals() error = %v, want nil", err)
 	}
 
-	// result can be nil or empty slice
 	if result != nil && len(result) != 0 {
 		t.Errorf("GetHospitals() length = %d, want 0", len(result))
 	}
@@ -153,5 +152,144 @@ func TestCreateMultipleHospitals(t *testing.T) {
 
 	if len(result) != 3 {
 		t.Errorf("GetHospitals() length = %d, want 3", len(result))
+	}
+}
+
+// Test 6: Update hospital successfully
+func TestUpdateHospitalSuccess(t *testing.T) {
+	mockRepo := mocks.NewMockHospitalRepository()
+	svc := service.NewHospitalService(mockRepo)
+
+	createInput := service.HospitalCreateInput{
+		Name:    "Old Hospital",
+		Address: "Old Address",
+	}
+
+	hospital, err := svc.CreateHospital(createInput)
+	if err != nil {
+		t.Fatalf("CreateHospital() failed: %v", err)
+	}
+
+	updateInput := service.HospitalUpdateInput{
+		Name:    "Updated Hospital",
+		Address: "New Address",
+	}
+
+	result, err := svc.UpdateHospital(hospital.ID, updateInput)
+
+	if err != nil {
+		t.Errorf("UpdateHospital() error = %v, want nil", err)
+	}
+
+	if result == nil {
+		t.Fatal("UpdateHospital() returned nil hospital")
+	}
+
+	if result.Name != updateInput.Name {
+		t.Errorf("Name = %v, want %v", result.Name, updateInput.Name)
+	}
+
+	if result.Address != updateInput.Address {
+		t.Errorf("Address = %v, want %v", result.Address, updateInput.Address)
+	}
+}
+
+// Test 7: Update hospital with empty name should return error
+func TestUpdateHospitalWithEmptyName(t *testing.T) {
+	mockRepo := mocks.NewMockHospitalRepository()
+	svc := service.NewHospitalService(mockRepo)
+
+	createInput := service.HospitalCreateInput{
+		Name:    "Test Hospital",
+		Address: "Test Address",
+	}
+
+	hospital, _ := svc.CreateHospital(createInput)
+
+	updateInput := service.HospitalUpdateInput{
+		Name:    "",
+		Address: "New Address",
+	}
+
+	result, err := svc.UpdateHospital(hospital.ID, updateInput)
+
+	if err == nil {
+		t.Error("UpdateHospital() with empty name should return error, but got nil")
+	}
+
+	if err != nil && err.Error() != "hospital name is required" {
+		t.Errorf("Error message = %v, want 'hospital name is required'", err.Error())
+	}
+
+	if result != nil {
+		t.Error("UpdateHospital() should return nil when error occurs")
+	}
+}
+
+// Test 8: Update non-existent hospital should return error
+func TestUpdateHospitalNotFound(t *testing.T) {
+	mockRepo := mocks.NewMockHospitalRepository()
+	svc := service.NewHospitalService(mockRepo)
+
+	nonExistentID := uuid.New()
+	updateInput := service.HospitalUpdateInput{
+		Name:    "Updated Hospital",
+		Address: "New Address",
+	}
+
+	result, err := svc.UpdateHospital(nonExistentID, updateInput)
+
+	if err == nil {
+		t.Error("UpdateHospital() with non-existent ID should return error, but got nil")
+	}
+
+	if err != nil && err.Error() != "hospital not found" {
+		t.Errorf("Error message = %v, want 'hospital not found'", err.Error())
+	}
+
+	if result != nil {
+		t.Error("UpdateHospital() should return nil when hospital not found")
+	}
+}
+
+// Test 9: Delete hospital successfully
+func TestDeleteHospitalSuccess(t *testing.T) {
+	mockRepo := mocks.NewMockHospitalRepository()
+	svc := service.NewHospitalService(mockRepo)
+
+	createInput := service.HospitalCreateInput{
+		Name:    "Hospital to Delete",
+		Address: "Delete Address",
+	}
+
+	hospital, _ := svc.CreateHospital(createInput)
+
+	err := svc.DeleteHospital(hospital.ID)
+
+	if err != nil {
+		t.Errorf("DeleteHospital() error = %v, want nil", err)
+	}
+
+	hospitals, _ := svc.GetHospitals()
+	if len(hospitals) != 0 {
+		t.Errorf("After delete, GetHospitals() returned %d hospitals, want 0", len(hospitals))
+	}
+}
+
+// Test 10: Delete non-existent hospital should return error
+func TestDeleteHospitalNotFound(t *testing.T) {
+	mockRepo := mocks.NewMockHospitalRepository()
+	svc := service.NewHospitalService(mockRepo)
+
+	nonExistentID := uuid.New()
+
+	err := svc.DeleteHospital(nonExistentID)
+
+	if err == nil {
+		t.Error("DeleteHospital() with non-existent ID should return error, but got nil")
+	}
+
+	if err != nil && err.Error() != "hospital not found" {
+		t.Errorf("Error message = %v, want 'hospital not found'", err.Error())
 	}
 }

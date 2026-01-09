@@ -12,6 +12,12 @@ type CreateHospitalRequest struct {
     Address string `json:"address"`
 }
 
+// UpdateHospitalRequest defines input payload for updating a hospital.
+type UpdateHospitalRequest struct {
+    Name    string `json:"name" binding:"required"`
+    Address string `json:"address"`
+}
+
 // HospitalResponse represents hospital data returned to clients.
 type HospitalResponse struct {
     ID        uuid.UUID `json:"id"`

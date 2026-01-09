@@ -6,11 +6,14 @@ import (
 
 	"github.com/PhanukornKMITL/hospital-exam/internal/entity"
 	"github.com/PhanukornKMITL/hospital-exam/internal/repository"
+	"github.com/google/uuid"
 )
 
 type HospitalService interface {
 	GetHospitals() ([]entity.Hospital, error)
 	CreateHospital(input HospitalCreateInput) (*entity.Hospital, error)
+	UpdateHospital(id uuid.UUID, input HospitalUpdateInput) (*entity.Hospital, error)
+	DeleteHospital(id uuid.UUID) error
 }
 
 type hospitalService struct {
@@ -18,6 +21,11 @@ type hospitalService struct {
 }
 
 type HospitalCreateInput struct {
+	Name    string
+	Address string
+}
+
+type HospitalUpdateInput struct {
 	Name    string
 	Address string
 }
@@ -40,4 +48,28 @@ func (s *hospitalService) CreateHospital(input HospitalCreateInput) (*entity.Hos
 		Address: input.Address,
 	}
 	return s.repo.Create(h)
+}
+
+func (s *hospitalService) UpdateHospital(id uuid.UUID, input HospitalUpdateInput) (*entity.Hospital, error) {
+	if strings.TrimSpace(input.Name) == "" {
+		return nil, errors.New("hospital name is required")
+	}
+
+	hospital, err := s.repo.FindByID(id)
+	if err != nil || hospital == nil {
+		return nil, errors.New("hospital not found")
+	}
+
+	hospital.Name = input.Name
+	hospital.Address = input.Address
+
+	return s.repo.Update(hospital)
+}
+
+func (s *hospitalService) DeleteHospital(id uuid.UUID) error {
+	hospital, err := s.repo.FindByID(id)
+	if err != nil || hospital == nil {
+		return errors.New("hospital not found")
+	}
+	return s.repo.Delete(id)
 }

@@ -16,4 +16,6 @@ func SetupHospitalRoutes(r *gin.Engine, db *gorm.DB) {
 
 	r.GET("/hospital", hospitalController.GetHospitals)
 	r.POST("/hospital", hospitalController.CreateHospital)
+	r.PUT("/hospital/:id", hospitalController.UpdateHospital)
+	r.DELETE("/hospital/:id", hospitalController.DeleteHospital)
 }
