@@ -12,7 +12,7 @@ import (
 
 // Test 1: Create staff successfully
 func TestCreateStaffSuccess(t *testing.T) {
-	
+
 	mockRepo := mocks.NewMockStaffRepository()
 	svc := service.NewStaffService(mockRepo)
 
@@ -56,7 +56,7 @@ func TestCreateStaffSuccess(t *testing.T) {
 
 // Test 2: Create staff with duplicate username should fail
 func TestCreateStaffDuplicateUsername(t *testing.T) {
-	// Arrange
+	
 	mockRepo := mocks.NewMockStaffRepository()
 	svc := service.NewStaffService(mockRepo)
 
@@ -67,19 +67,18 @@ func TestCreateStaffDuplicateUsername(t *testing.T) {
 		HospitalID: hospitalID,
 	}
 
-	// สร้าง staff ตัวแรก
 	_, err := svc.CreateStaff(input)
 	if err != nil {
 		t.Fatalf("First CreateStaff() failed: %v", err)
 	}
 
-	// Act: ลองสร้าง staff ที่มี username เดียวกัน
 	_, err = svc.CreateStaff(input)
 
-	// Assert: ควรจะ error
 	if err == nil {
 		t.Error("CreateStaff() with duplicate username should return error, but got nil")
 	}
+
+	t.Logf("expected duplicate username error: %v", err)
 
 	if err.Error() != "username already exists in this hospital" {
 		t.Errorf("Error message = %v, want 'username already exists in this hospital'", err.Error())
@@ -88,7 +87,7 @@ func TestCreateStaffDuplicateUsername(t *testing.T) {
 
 // Test 3: Get all staffs successfully
 func TestGetStaffsSuccess(t *testing.T) {
-	// Arrange
+
 	mockRepo := mocks.NewMockStaffRepository()
 	svc := service.NewStaffService(mockRepo)
 
@@ -107,10 +106,8 @@ func TestGetStaffsSuccess(t *testing.T) {
 	svc.CreateStaff(input1)
 	svc.CreateStaff(input2)
 
-	// Act
 	staffs, err := svc.GetStaffs()
 
-	// Assert
 	if err != nil {
 		t.Errorf("GetStaffs() error = %v, want nil", err)
 	}
@@ -122,7 +119,6 @@ func TestGetStaffsSuccess(t *testing.T) {
 
 // Test 4: Create staff with empty username should fail
 func TestCreateStaffEmptyUsername(t *testing.T) {
-	// Arrange
 	mockRepo := mocks.NewMockStaffRepository()
 	svc := service.NewStaffService(mockRepo)
 
@@ -132,21 +128,24 @@ func TestCreateStaffEmptyUsername(t *testing.T) {
 		HospitalID: uuid.New(),
 	}
 
-	// Act
-	result, _ := svc.CreateStaff(input)
+	result, err := svc.CreateStaff(input)
 
-	// Assert
-	// CreateStaff ไม่ validate username ว่างใน layer นี้
-	// แต่ควรจะ fail ที่ repo หรือ database layer
-	// ขึ้นอยู่กับ implementation
+	if err == nil {
+		t.Error("CreateStaff() with empty username should return error, but got nil")
+	}
+
+	if err != nil && err.Error() != "username is required" {
+		t.Errorf("Error message = %v, want 'username is required'", err.Error())
+	}
+
 	if result != nil {
-		t.Errorf("CreateStaff() with empty username should return nil or error")
+		t.Errorf("CreateStaff() should return nil when username is empty")
 	}
 }
 
 // Test 5: Delete staff successfully
 func TestDeleteStaffSuccess(t *testing.T) {
-	// Arrange
+	
 	mockRepo := mocks.NewMockStaffRepository()
 	svc := service.NewStaffService(mockRepo)
 
@@ -159,17 +158,15 @@ func TestDeleteStaffSuccess(t *testing.T) {
 
 	staff, _ := svc.CreateStaff(input)
 
-	// Act
 	err := svc.DeleteStaff(staff.ID)
 
-	// Assert
 	if err != nil {
 		t.Errorf("DeleteStaff() error = %v, want nil", err)
 	}
 
-	// ยืนยันว่า staff ถูกลบแล้ว
 	staffs, _ := svc.GetStaffs()
 	if len(staffs) != 0 {
 		t.Errorf("After delete, GetStaffs() returned %d staffs, want 0", len(staffs))
 	}
+	t.Logf("no staff left")
 }

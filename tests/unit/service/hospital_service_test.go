@@ -10,14 +10,11 @@ import (
 
 // Test 1: Get all hospitals successfully (empty list)
 func TestGetHospitalsSuccess_Empty(t *testing.T) {
-	// Arrange
 	mockRepo := mocks.NewMockHospitalRepository()
 	svc := service.NewHospitalService(mockRepo)
 
-	// Act
 	result, err := svc.GetHospitals()
 
-	// Assert
 	if err != nil {
 		t.Errorf("GetHospitals() error = %v, want nil", err)
 	}
@@ -30,7 +27,6 @@ func TestGetHospitalsSuccess_Empty(t *testing.T) {
 
 // Test 2: Get all hospitals successfully (with data)
 func TestGetHospitalsSuccess_WithData(t *testing.T) {
-	// Arrange
 	mockRepo := mocks.NewMockHospitalRepository()
 	svc := service.NewHospitalService(mockRepo)
 
@@ -51,10 +47,8 @@ func TestGetHospitalsSuccess_WithData(t *testing.T) {
 		t.Fatalf("CreateHospital() failed: err1=%v, err2=%v", err1, err2)
 	}
 
-	// Act
 	result, err := svc.GetHospitals()
 
-	// Assert
 	if err != nil {
 		t.Errorf("GetHospitals() error = %v, want nil", err)
 	}
@@ -76,7 +70,6 @@ func TestGetHospitalsSuccess_WithData(t *testing.T) {
 
 // Test 3: Create hospital successfully
 func TestCreateHospitalSuccess(t *testing.T) {
-	// Arrange
 	mockRepo := mocks.NewMockHospitalRepository()
 	svc := service.NewHospitalService(mockRepo)
 
@@ -85,10 +78,8 @@ func TestCreateHospitalSuccess(t *testing.T) {
 		Address: "123 Main St, Bangkok",
 	}
 
-	// Act
 	result, err := svc.CreateHospital(input)
 
-	// Assert
 	if err != nil {
 		t.Errorf("CreateHospital() error = %v, want nil", err)
 	}
@@ -111,9 +102,8 @@ func TestCreateHospitalSuccess(t *testing.T) {
 	}
 }
 
-// Test 4: Create hospital with empty name
+// Test 4: Create hospital with empty name should return error
 func TestCreateHospitalWithEmptyName(t *testing.T) {
-	// Arrange
 	mockRepo := mocks.NewMockHospitalRepository()
 	svc := service.NewHospitalService(mockRepo)
 
@@ -122,26 +112,23 @@ func TestCreateHospitalWithEmptyName(t *testing.T) {
 		Address: "123 Main St, Bangkok",
 	}
 
-	// Act
 	result, err := svc.CreateHospital(input)
 
-	// Assert
-	if err != nil {
-		t.Errorf("CreateHospital() error = %v, want nil", err)
+	if err == nil {
+		t.Error("CreateHospital() with empty name should return error, but got nil")
 	}
 
-	if result == nil {
-		t.Fatal("CreateHospital() returned nil hospital")
+	if err != nil && err.Error() != "hospital name is required" {
+		t.Errorf("Error message = %v, want 'hospital name is required'", err.Error())
 	}
 
-	if result.Name != "" {
-		t.Errorf("Name = %v, want empty string", result.Name)
+	if result != nil {
+		t.Error("CreateHospital() should return nil hospital when error occurs")
 	}
 }
 
 // Test 5: Create multiple hospitals
 func TestCreateMultipleHospitals(t *testing.T) {
-	// Arrange
 	mockRepo := mocks.NewMockHospitalRepository()
 	svc := service.NewHospitalService(mockRepo)
 
@@ -151,7 +138,6 @@ func TestCreateMultipleHospitals(t *testing.T) {
 		{Name: "Hospital 3", Address: "Address 3"},
 	}
 
-	// Act
 	for _, input := range hospitals {
 		_, err := svc.CreateHospital(input)
 		if err != nil {
@@ -161,7 +147,6 @@ func TestCreateMultipleHospitals(t *testing.T) {
 
 	result, err := svc.GetHospitals()
 
-	// Assert
 	if err != nil {
 		t.Errorf("GetHospitals() error = %v, want nil", err)
 	}

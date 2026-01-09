@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/PhanukornKMITL/hospital-exam/internal/entity"
@@ -44,6 +45,10 @@ func (s *staffService) GetStaffs() ([]entity.Staff, error) {
 }
 
 func (s *staffService) CreateStaff(input StaffCreateInput) (*entity.Staff, error) {
+	if strings.TrimSpace(input.Username) == "" {
+		return nil, errors.New("username is required")
+	}
+
 	// Check duplicate username within the same hospital in app layer
 	exists, err := s.repo.ExistsByUsernameInHospital(input.HospitalID, input.Username)
 	if err != nil {

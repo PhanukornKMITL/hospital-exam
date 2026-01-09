@@ -24,7 +24,7 @@ func NewPatientController(service service.PatientService) *PatientController {
 
 // GetPatients godoc
 // @Summary Get patients by hospital
-// @Description Retrieve all patients for the authenticated staff's hospital
+// @Description Retrieve patients only within the authenticated staff's hospital (no cross-hospital access)
 // @Tags patients
 // @Accept json
 // @Produce json
@@ -57,7 +57,7 @@ func (p *PatientController) GetPatients(c *gin.Context) {
 
 // CreatePatient godoc
 // @Summary Create a new patient
-// @Description Register a new patient to the authenticated staff's hospital
+// @Description Register a new patient only into the authenticated staff's hospital (no cross-hospital access)
 // @Tags patients
 // @Accept json
 // @Produce json
@@ -125,8 +125,26 @@ func (p *PatientController) CreatePatient(c *gin.Context) {
 	c.JSON(http.StatusCreated, toPatientResponse(*patient))
 }
 
-func (p *PatientController) SearchPatient(c *gin.Context) {
+// SearchPatient godoc
+// @Summary Search patient by identifier
+// @Description Retrieve patient by identifier only within the authenticated staff's hospital (no cross-hospital access)
+// @Tags patients
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Patient identifier (nationalId or passportId)"
+// @Success 200 {object} dto.PatientResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /patients/{id} [get]
+func (p *PatientController) SearchPatientByID(c *gin.Context) {
 	identifier := c.Param("id")
+
+	if identifier == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "identifier is required"})
+		return
+	}
 
 	hospitalIDStr, exists := c.Get("hospitalId")
 	if !exists {
@@ -140,13 +158,8 @@ func (p *PatientController) SearchPatient(c *gin.Context) {
 		return
 	}
 
-	patient, err := p.service.SearchPatientByIdentifier(hospitalID, identifier)
+	patient, err := p.service.SearchPatientByID(hospitalID, identifier)
 	if err != nil {
-		if err.Error() == "identifier is required" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		// If not found, return 404
 		c.JSON(http.StatusNotFound, gin.H{"error": "patient not found"})
 		return
 	}
@@ -155,6 +168,17 @@ func (p *PatientController) SearchPatient(c *gin.Context) {
 }
 
 // SearchPatients handles POST /patient/search with filter DTO and pagination.
+// @Summary Search patients with filters
+// @Description Search patients only within the authenticated staff's hospital (no cross-hospital access)
+// @Tags patients
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.SearchPatientRequest true "Search filters"
+// @Success 200 {object} dto.PaginatedPatientsResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /patients/search [post]
 func (p *PatientController) SearchPatients(c *gin.Context) {
 	var req dto.SearchPatientRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

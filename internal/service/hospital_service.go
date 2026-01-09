@@ -1,6 +1,9 @@
 package service
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/PhanukornKMITL/hospital-exam/internal/entity"
 	"github.com/PhanukornKMITL/hospital-exam/internal/repository"
 )
@@ -28,6 +31,10 @@ func (s *hospitalService) GetHospitals() ([]entity.Hospital, error) {
 }
 
 func (s *hospitalService) CreateHospital(input HospitalCreateInput) (*entity.Hospital, error) {
+	if strings.TrimSpace(input.Name) == "" {
+		return nil, errors.New("hospital name is required")
+	}
+
 	h := &entity.Hospital{
 		Name:    input.Name,
 		Address: input.Address,

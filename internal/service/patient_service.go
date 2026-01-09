@@ -14,7 +14,7 @@ type PatientService interface {
 	GetPatients() ([]entity.Patient, error)
 	GetPatientsByHospital(hospitalID uuid.UUID) ([]entity.Patient, error)
 	CreatePatient(input PatientCreateInput) (*entity.Patient, error)
-	SearchPatientByIdentifier(hospitalID uuid.UUID, identifier string) (*entity.Patient, error)
+	SearchPatientByID(hospitalID uuid.UUID, identifier string) (*entity.Patient, error)
 	SearchPatients(hospitalID uuid.UUID, input PatientSearchInput, page, limit int) ([]entity.Patient, int64, error)
 }
 
@@ -102,11 +102,8 @@ func (s *patientService) CreatePatient(input PatientCreateInput) (*entity.Patien
 	return s.repo.CreateWithGeneratedHN(patient)
 }
 
-func (s *patientService) SearchPatientByIdentifier(hospitalID uuid.UUID, identifier string) (*entity.Patient, error) {
+func (s *patientService) SearchPatientByID(hospitalID uuid.UUID, identifier string) (*entity.Patient, error) {
 	id := strings.TrimSpace(identifier)
-	if id == "" {
-		return nil, errors.New("identifier is required")
-	}
 	return s.repo.FindByHospitalAndIdentifier(hospitalID, id)
 }
 

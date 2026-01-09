@@ -14,7 +14,7 @@ import (
 
 // Test 1: Get all patients successfully
 func TestGetPatientsSuccess(t *testing.T) {
-	// Arrange
+
 	mockRepo := mocks.NewMockPatientRepository()
 
 	patient1 := &entity.Patient{
@@ -32,10 +32,8 @@ func TestGetPatientsSuccess(t *testing.T) {
 
 	svc := service.NewPatientService(mockRepo)
 
-	// Act
 	patients, err := svc.GetPatients()
 
-	// Assert
 	if err != nil {
 		t.Errorf("GetPatients() error = %v, want nil", err)
 	}
@@ -47,7 +45,7 @@ func TestGetPatientsSuccess(t *testing.T) {
 
 // Test 2: Get patients by hospital successfully
 func TestGetPatientsByHospitalSuccess(t *testing.T) {
-	// Arrange
+
 	mockRepo := mocks.NewMockPatientRepository()
 
 	hospitalID1 := uuid.New()
@@ -68,10 +66,8 @@ func TestGetPatientsByHospitalSuccess(t *testing.T) {
 
 	svc := service.NewPatientService(mockRepo)
 
-	// Act
 	patients, err := svc.GetPatientsByHospital(hospitalID1)
 
-	// Assert
 	if err != nil {
 		t.Errorf("GetPatientsByHospital() error = %v, want nil", err)
 	}
@@ -87,7 +83,7 @@ func TestGetPatientsByHospitalSuccess(t *testing.T) {
 
 // Test 3: Create patient successfully
 func TestCreatePatientSuccess(t *testing.T) {
-	// Arrange
+
 	mockRepo := mocks.NewMockPatientRepository()
 	svc := service.NewPatientService(mockRepo)
 
@@ -107,10 +103,8 @@ func TestCreatePatientSuccess(t *testing.T) {
 		Gender:      "M",
 	}
 
-	// Act
 	result, err := svc.CreatePatient(input)
 
-	// Assert
 	if err != nil {
 		t.Errorf("CreatePatient() error = %v, want nil", err)
 	}
@@ -134,7 +128,7 @@ func TestCreatePatientSuccess(t *testing.T) {
 
 // Test 4: Create patient with gender 'F'
 func TestCreatePatientWithFemaleGender(t *testing.T) {
-	// Arrange
+
 	mockRepo := mocks.NewMockPatientRepository()
 	svc := service.NewPatientService(mockRepo)
 
@@ -154,10 +148,8 @@ func TestCreatePatientWithFemaleGender(t *testing.T) {
 		Gender:      "F",
 	}
 
-	// Act
 	result, err := svc.CreatePatient(input)
 
-	// Assert
 	if err != nil {
 		t.Errorf("CreatePatient() error = %v, want nil", err)
 	}
@@ -175,16 +167,16 @@ func TestCreatePatientWithFemaleGender(t *testing.T) {
 	}
 }
 
-// Test 5: Create patient with invalid gender 
+// Test 5: Create patient with invalid gender
 func TestCreatePatientWithInvalidGender(t *testing.T) {
-	// Arrange
+
 	mockRepo := mocks.NewMockPatientRepository()
 	svc := service.NewPatientService(mockRepo)
 
 	hospitalID := uuid.New()
 	dob := time.Date(1990, 1, 15, 0, 0, 0, 0, time.UTC)
 	nationalID := "9876543210987"
-	
+
 	// Test with invalid gender value
 	input := service.PatientCreateInput{
 		HospitalID:  hospitalID,
@@ -198,10 +190,8 @@ func TestCreatePatientWithInvalidGender(t *testing.T) {
 		Gender:      "X", // Invalid gender
 	}
 
-	// Act
 	result, err := svc.CreatePatient(input)
 
-	// Assert - should return error
 	if err == nil {
 		t.Error("CreatePatient() with invalid gender should return error, but got nil")
 	} else {
@@ -219,7 +209,7 @@ func TestCreatePatientWithInvalidGender(t *testing.T) {
 
 // Test 6: Create patient without gender should return error
 func TestCreatePatientWithoutGender(t *testing.T) {
-	// Arrange
+
 	mockRepo := mocks.NewMockPatientRepository()
 	svc := service.NewPatientService(mockRepo)
 
@@ -239,7 +229,6 @@ func TestCreatePatientWithoutGender(t *testing.T) {
 		Gender:      "", // Empty gender
 	}
 
-	// Act
 	result, err := svc.CreatePatient(input)
 
 	// Assert - should return error
@@ -256,9 +245,8 @@ func TestCreatePatientWithoutGender(t *testing.T) {
 	}
 }
 
-// Test 7: Search patient by identifier within same hospital
-func TestSearchPatientByIdentifierSameHospital(t *testing.T) {
-	// Arrange
+// Test 7: Search patient by identifier within same hospital (national ID)
+func TestSearchPatientByIDSameHospitalNationalID(t *testing.T) {
 	mockRepo := mocks.NewMockPatientRepository()
 	svc := service.NewPatientService(mockRepo)
 
@@ -266,8 +254,8 @@ func TestSearchPatientByIdentifierSameHospital(t *testing.T) {
 	nationalID := "1234567890123"
 
 	patient := &entity.Patient{
-		ID:         uuid.New(),
-		HospitalID: hospitalID,
+		ID:          uuid.New(),
+		HospitalID:  hospitalID,
 		FirstNameTH: "สมชาย",
 		LastNameTH:  "ใจดี",
 		NationalID:  &nationalID,
@@ -275,16 +263,14 @@ func TestSearchPatientByIdentifierSameHospital(t *testing.T) {
 
 	mockRepo.Create(patient)
 
-	// Act
-	result, err := svc.SearchPatientByIdentifier(hospitalID, nationalID)
+	result, err := svc.SearchPatientByID(hospitalID, nationalID)
 
-	// Assert
 	if err != nil {
-		t.Errorf("SearchPatientByIdentifier() error = %v, want nil", err)
+		t.Errorf("SearchPatientByID() error = %v, want nil", err)
 	}
 
 	if result == nil {
-		t.Fatal("SearchPatientByIdentifier() returned nil, want patient")
+		t.Fatal("SearchPatientByID() returned nil, want patient")
 	}
 
 	if result.ID != patient.ID {
@@ -292,9 +278,42 @@ func TestSearchPatientByIdentifierSameHospital(t *testing.T) {
 	}
 }
 
-// Test 8: Search patient by identifier across different hospitals should not return data
-func TestSearchPatientByIdentifierDifferentHospital(t *testing.T) {
-	// Arrange
+// Test 8: Search patient by identifier within same hospital (passport ID)
+func TestSearchPatientByIDSameHospitalPassportID(t *testing.T) {
+	mockRepo := mocks.NewMockPatientRepository()
+	svc := service.NewPatientService(mockRepo)
+
+	hospitalID := uuid.New()
+	passportID := "P1234567"
+
+	patient := &entity.Patient{
+		ID:          uuid.New(),
+		HospitalID:  hospitalID,
+		FirstNameTH: "สมชาย",
+		LastNameTH:  "ใจดี",
+		PassportID:  &passportID,
+	}
+
+	mockRepo.Create(patient)
+
+	result, err := svc.SearchPatientByID(hospitalID, passportID)
+
+	if err != nil {
+		t.Errorf("SearchPatientByID() error = %v, want nil", err)
+	}
+
+	if result == nil {
+		t.Fatal("SearchPatientByID() returned nil, want patient")
+	}
+
+	if result.ID != patient.ID {
+		t.Errorf("Patient ID = %v, want %v", result.ID, patient.ID)
+	}
+}
+
+// Test 9: Search patient by identifier across different hospitals should not return data
+func TestSearchPatientByIDDifferentHospital(t *testing.T) {
+
 	mockRepo := mocks.NewMockPatientRepository()
 	svc := service.NewPatientService(mockRepo)
 
@@ -303,8 +322,8 @@ func TestSearchPatientByIdentifierDifferentHospital(t *testing.T) {
 	nationalID := "9876543210123"
 
 	patient := &entity.Patient{
-		ID:         uuid.New(),
-		HospitalID: hospitalA,
+		ID:          uuid.New(),
+		HospitalID:  hospitalA,
 		FirstNameTH: "สมหญิง",
 		LastNameTH:  "สวยงาม",
 		NationalID:  &nationalID,
@@ -312,15 +331,13 @@ func TestSearchPatientByIdentifierDifferentHospital(t *testing.T) {
 
 	mockRepo.Create(patient)
 
-	// Act
-	result, err := svc.SearchPatientByIdentifier(hospitalB, nationalID)
+	result, err := svc.SearchPatientByID(hospitalB, nationalID)
 
-	// Assert
 	if err != nil {
-		t.Errorf("SearchPatientByIdentifier() error = %v, want nil", err)
+		t.Errorf("SearchPatientByID() error = %v, want nil", err)
 	}
 
 	if result != nil {
-		t.Errorf("SearchPatientByIdentifier() should return nil when hospital mismatched, got %v", result.ID)
+		t.Errorf("SearchPatientByID() should return nil when hospital mismatched, got %v", result.ID)
 	}
 }
