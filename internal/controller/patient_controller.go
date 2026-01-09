@@ -33,7 +33,7 @@ func NewPatientController(service service.PatientService) *PatientController {
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
-// @Router /patients [get]
+// @Router /patient [get]
 func (p *PatientController) GetPatients(c *gin.Context) {
 	hospitalIDStr, exists := c.Get("hospitalId")
 	if !exists {
@@ -67,7 +67,7 @@ func (p *PatientController) GetPatients(c *gin.Context) {
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
-// @Router /patients [post]
+// @Router /patient/create [post]
 func (p *PatientController) CreatePatient(c *gin.Context) {
 	var req dto.CreatePatientRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -126,7 +126,7 @@ func (p *PatientController) CreatePatient(c *gin.Context) {
 }
 
 // SearchPatient godoc
-// @Summary Search patient by identifier
+// @Summary Search patient by identifier (nationalId or passportId)
 // @Description Retrieve patient by identifier only within the authenticated staff's hospital (no cross-hospital access)
 // @Tags patients
 // @Accept json
@@ -137,7 +137,7 @@ func (p *PatientController) CreatePatient(c *gin.Context) {
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 404 {object} dto.ErrorResponse
-// @Router /patients/{id} [get]
+// @Router /patient/{id} [get]
 func (p *PatientController) SearchPatientByID(c *gin.Context) {
 	identifier := c.Param("id")
 
@@ -178,7 +178,7 @@ func (p *PatientController) SearchPatientByID(c *gin.Context) {
 // @Success 200 {object} dto.PaginatedPatientsResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
-// @Router /patients/search [post]
+// @Router /patient/search [post]
 func (p *PatientController) SearchPatients(c *gin.Context) {
 	var req dto.SearchPatientRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

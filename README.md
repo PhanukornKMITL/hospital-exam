@@ -1,5 +1,13 @@
 # Hospital Exam API
 
+## 🧭 Overview
+- Purpose: Middleware API for hospital staff to search and display patient information while enforcing strict same-hospital isolation.
+- Architecture: Go (Gin) API behind Nginx, PostgreSQL for persistence, Docker Compose for local orchestration.
+- Features: Staff account creation and JWT login; patient search by ID (national_id or passport_id) and filter-based search with optional fields; simple hospital management.
+- Security: All patient operations require `Authorization: Bearer <token>`; JWT-based auth; results restricted to the authenticated staff’s hospital.
+- Documentation: Interactive Swagger available at `/swagger/index.html`.
+- Testing: Unit tests cover positive and negative scenarios for Hospital, Staff, and Patient services.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -77,7 +85,16 @@ curl http://localhost/health
 - `GET /patient/search/:id` - Search patient by ID (requires auth)
 - `POST /patient/search` - Search patients (requires auth)
 
-## 🛠 Development
+Auth header example (required for patient endpoints):
+```bash
+curl -H "Authorization: Bearer <JWT_TOKEN>" http://localhost/patient
+```
+
+### 🧪 Testing
+Run unit tests (services):
+```bash
+go test ./tests/unit/service/... -v
+```
 
 ### Stop services
 ```bash
@@ -98,7 +115,6 @@ docker-compose up -d --build
 ```
 
 ## 📦 Services
-
 - **API**: Go (Gin framework) - Internal port 8080
 - **Nginx**: Reverse proxy - Ports 80 (HTTP) & 443 (HTTPS)
 - **PostgreSQL**: Database - Port 5432

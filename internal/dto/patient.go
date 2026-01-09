@@ -16,7 +16,7 @@ type CreatePatientRequest struct {
 	MiddleNameEN string `json:"middleNameEN"`
 	LastNameEN   string `json:"lastNameEN" binding:"required"`
 
-	DateOfBirth *string `json:"dateOfBirth" binding:"required"` // expected format: YYYY-MM-DD
+	DateOfBirth *string `json:"dateOfBirth" binding:"required" example:"1990-01-15"` // expected format: YYYY-MM-DD
 
 	NationalID  string `json:"nationalId"`
 	PassportID  string `json:"passportId"`
@@ -62,7 +62,7 @@ type SearchPatientRequest struct {
 	MiddleNameEN string `json:"middleNameEN"`
 	LastNameEN   string `json:"lastNameEN"`
 
-	DateOfBirth *string `json:"dateOfBirth"` // YYYY-MM-DD
+	DateOfBirth *string `json:"dateOfBirth" example:"1990-01-15"` // YYYY-MM-DD
 
 	NationalID  string `json:"nationalId"`
 	PassportID  string `json:"passportId"`

@@ -203,7 +203,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/patients": {
+        "/patient": {
             "get": {
                 "security": [
                     {
@@ -307,7 +307,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/patients/search": {
+        "/patient/search": {
             "post": {
                 "security": [
                     {
@@ -358,7 +358,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/patients/{id}": {
+        "/patient/{id}": {
             "get": {
                 "security": [
                     {
@@ -375,7 +375,7 @@ const docTemplate = `{
                 "tags": [
                     "patients"
                 ],
-                "summary": "Search patient by identifier",
+                "summary": "Search patient by identifier (nationalId or passportId)",
                 "parameters": [
                     {
                         "type": "string",
@@ -665,7 +665,8 @@ const docTemplate = `{
             "properties": {
                 "dateOfBirth": {
                     "description": "expected format: YYYY-MM-DD",
-                    "type": "string"
+                    "type": "string",
+                    "example": "1990-01-15"
                 },
                 "email": {
                     "type": "string"
@@ -855,7 +856,8 @@ const docTemplate = `{
             "properties": {
                 "dateOfBirth": {
                     "description": "YYYY-MM-DD",
-                    "type": "string"
+                    "type": "string",
+                    "example": "1990-01-15"
                 },
                 "email": {
                     "type": "string"

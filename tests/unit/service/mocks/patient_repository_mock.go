@@ -1,6 +1,8 @@
 package mocks
 
 import (
+	"time"
+
 	"github.com/PhanukornKMITL/hospital-exam/internal/entity"
 	"github.com/PhanukornKMITL/hospital-exam/internal/repository"
 	"github.com/google/uuid"
@@ -95,5 +97,92 @@ func (m *MockPatientRepository) ExistsByPassportIDInHospital(hospitalID uuid.UUI
 }
 
 func (m *MockPatientRepository) FindByHospitalWithFilters(hospitalID uuid.UUID, filters repository.PatientSearchFilters, page, limit int) ([]entity.Patient, int64, error) {
-	return nil, 0, nil
+	var results []entity.Patient
+
+	// Filter by hospital and fields
+	for _, p := range m.patients {
+		if p.HospitalID != hospitalID {
+			continue
+		}
+
+		if filters.PatientHN != nil && p.PatientHN != *filters.PatientHN {
+			continue
+		}
+		if filters.FirstNameTH != nil && p.FirstNameTH != *filters.FirstNameTH {
+			continue
+		}
+		if filters.MiddleNameTH != nil && p.MiddleNameTH != *filters.MiddleNameTH {
+			continue
+		}
+		if filters.LastNameTH != nil && p.LastNameTH != *filters.LastNameTH {
+			continue
+		}
+		if filters.FirstNameEN != nil && p.FirstNameEN != *filters.FirstNameEN {
+			continue
+		}
+		if filters.MiddleNameEN != nil && p.MiddleNameEN != *filters.MiddleNameEN {
+			continue
+		}
+		if filters.LastNameEN != nil && p.LastNameEN != *filters.LastNameEN {
+			continue
+		}
+		if filters.DateOfBirth != nil && !sameDate(p.DateOfBirth, filters.DateOfBirth) {
+			continue
+		}
+		if filters.NationalID != nil {
+			if p.NationalID == nil || *p.NationalID != *filters.NationalID {
+				continue
+			}
+		}
+		if filters.PassportID != nil {
+			if p.PassportID == nil || *p.PassportID != *filters.PassportID {
+				continue
+			}
+		}
+		if filters.PhoneNumber != nil && p.PhoneNumber != *filters.PhoneNumber {
+			continue
+		}
+		if filters.Email != nil && p.Email != *filters.Email {
+			continue
+		}
+		if filters.Gender != nil && p.Gender != *filters.Gender {
+			continue
+		}
+
+		results = append(results, *p)
+	}
+
+	total := int64(len(results))
+
+	// Pagination
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if page <= 0 {
+		page = 1
+	}
+
+	start := (page - 1) * limit
+	if start >= len(results) {
+		return []entity.Patient{}, total, nil
+	}
+	end := start + limit
+	if end > len(results) {
+		end = len(results)
+	}
+
+	return results[start:end], total, nil
+}
+
+// sameDate compares date by YYYY-MM-DD ignoring time of day and timezone.
+func sameDate(a *time.Time, b *time.Time) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+	aa := a.UTC()
+	bb := b.UTC()
+	return aa.Year() == bb.Year() && aa.Month() == bb.Month() && aa.Day() == bb.Day()
 }

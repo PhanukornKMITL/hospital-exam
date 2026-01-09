@@ -13,6 +13,7 @@ definitions:
     properties:
       dateOfBirth:
         description: 'expected format: YYYY-MM-DD'
+        example: "1990-01-15"
         type: string
       email:
         type: string
@@ -148,6 +149,7 @@ definitions:
     properties:
       dateOfBirth:
         description: YYYY-MM-DD
+        example: "1990-01-15"
         type: string
       email:
         type: string
@@ -345,7 +347,7 @@ paths:
       summary: Update a hospital
       tags:
       - hospitals
-  /patients:
+  /patient:
     get:
       consumes:
       - application/json
@@ -413,7 +415,7 @@ paths:
       summary: Create a new patient
       tags:
       - patients
-  /patients/{id}:
+  /patient/{id}:
     get:
       consumes:
       - application/json
@@ -446,10 +448,10 @@ paths:
             $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Search patient by identifier
+      summary: Search patient by identifier (nationalId or passportId)
       tags:
       - patients
-  /patients/search:
+  /patient/search:
     post:
       consumes:
       - application/json
