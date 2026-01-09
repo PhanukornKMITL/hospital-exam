@@ -21,6 +21,9 @@ definitions:
       firstNameTH:
         type: string
       gender:
+        enum:
+        - M
+        - F
         type: string
       lastNameEN:
         type: string
@@ -61,6 +64,12 @@ definitions:
     - password
     - username
     type: object
+  dto.ErrorResponse:
+    properties:
+      error:
+        example: error message here
+        type: string
+    type: object
   dto.HospitalResponse:
     properties:
       address:
@@ -86,6 +95,19 @@ definitions:
     - hospitalId
     - password
     - username
+    type: object
+  dto.PaginatedPatientsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.PatientResponse'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
     type: object
   dto.PatientResponse:
     properties:
@@ -122,6 +144,40 @@ definitions:
       phoneNumber:
         type: string
     type: object
+  dto.SearchPatientRequest:
+    properties:
+      dateOfBirth:
+        description: YYYY-MM-DD
+        type: string
+      email:
+        type: string
+      firstNameEN:
+        type: string
+      firstNameTH:
+        type: string
+      gender:
+        type: string
+      lastNameEN:
+        type: string
+      lastNameTH:
+        type: string
+      limit:
+        type: integer
+      middleNameEN:
+        type: string
+      middleNameTH:
+        type: string
+      nationalId:
+        type: string
+      page:
+        type: integer
+      passportId:
+        type: string
+      patientHN:
+        type: string
+      phoneNumber:
+        type: string
+    type: object
   dto.StaffLoginResponse:
     properties:
       token:
@@ -137,6 +193,25 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  dto.UpdateHospitalRequest:
+    properties:
+      address:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  dto.UpdateStaffRequest:
+    properties:
+      password:
+        description: Optional - only update if provided
+        type: string
+      username:
+        type: string
+    required:
+    - username
     type: object
 host: localhost
 info:
@@ -168,9 +243,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Get all hospitals
       tags:
       - hospitals
@@ -195,23 +268,89 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Create a new hospital
+      tags:
+      - hospitals
+  /hospital/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a hospital by ID
+      parameters:
+      - description: Hospital ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Delete a hospital
+      tags:
+      - hospitals
+    put:
+      consumes:
+      - application/json
+      description: Update hospital information by ID
+      parameters:
+      - description: Hospital ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated hospital details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateHospitalRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.HospitalResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update a hospital
       tags:
       - hospitals
   /patients:
     get:
       consumes:
       - application/json
-      description: Retrieve all patients for the authenticated staff's hospital
+      description: Retrieve patients only within the authenticated staff's hospital
+        (no cross-hospital access)
       produces:
       - application/json
       responses:
@@ -224,21 +363,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get patients by hospital
@@ -247,7 +380,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Register a new patient to the authenticated staff's hospital
+      description: Register a new patient only into the authenticated staff's hospital
+        (no cross-hospital access)
       parameters:
       - description: Patient details
         in: body
@@ -265,27 +399,90 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create a new patient
       tags:
       - patients
-  /staffs:
+  /patients/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve patient by identifier only within the authenticated staff's
+        hospital (no cross-hospital access)
+      parameters:
+      - description: Patient identifier (nationalId or passportId)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PatientResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Search patient by identifier
+      tags:
+      - patients
+  /patients/search:
+    post:
+      consumes:
+      - application/json
+      description: Search patients only within the authenticated staff's hospital
+        (no cross-hospital access)
+      parameters:
+      - description: Search filters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SearchPatientRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PaginatedPatientsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Search patients with filters
+      tags:
+      - patients
+  /staff:
     get:
       consumes:
       - application/json
@@ -302,12 +499,76 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Get all staffs
       tags:
       - staffs
+  /staff/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete staff member by ID
+      parameters:
+      - description: Staff ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Delete a staff
+      tags:
+      - staffs
+    put:
+      consumes:
+      - application/json
+      description: Update staff information by ID
+      parameters:
+      - description: Staff ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated staff details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateStaffRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.StaffResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update a staff member
+      tags:
+      - staffs
+  /staff/create:
     post:
       consumes:
       - application/json
@@ -329,19 +590,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Create a new staff
       tags:
       - staffs
-  /staffs/login:
+  /staff/login:
     post:
       consumes:
       - application/json
@@ -363,18 +620,14 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Staff login
       tags:
-      - auth
+      - staffs
 schemes:
 - http
 securityDefinitions:

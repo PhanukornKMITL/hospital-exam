@@ -25,7 +25,7 @@ func NewHospitalController(service service.HospitalService) *HospitalController 
 // @Accept json
 // @Produce json
 // @Success 200 {array} dto.HospitalResponse
-// @Failure 500 {object} map[string]string
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /hospital [get]
 func (h *HospitalController) GetHospitals(c *gin.Context) {
 	hospitals, err := h.service.GetHospitals()
@@ -47,8 +47,8 @@ func (h *HospitalController) GetHospitals(c *gin.Context) {
 // @Produce json
 // @Param request body dto.CreateHospitalRequest true "Hospital details"
 // @Success 201 {object} dto.HospitalResponse
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /hospital [post]
 func (h *HospitalController) CreateHospital(c *gin.Context) {
 	var req dto.CreateHospitalRequest
@@ -78,9 +78,9 @@ func (h *HospitalController) CreateHospital(c *gin.Context) {
 // @Param id path string true "Hospital ID (UUID)"
 // @Param request body dto.UpdateHospitalRequest true "Updated hospital details"
 // @Success 200 {object} dto.HospitalResponse
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /hospital/{id} [put]
 func (h *HospitalController) UpdateHospital(c *gin.Context) {
 	idParam := c.Param("id")
@@ -120,9 +120,9 @@ func (h *HospitalController) UpdateHospital(c *gin.Context) {
 // @Produce json
 // @Param id path string true "Hospital ID (UUID)"
 // @Success 204
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /hospital/{id} [delete]
 func (h *HospitalController) DeleteHospital(c *gin.Context) {
 	idParam := c.Param("id")

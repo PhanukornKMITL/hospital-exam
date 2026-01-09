@@ -30,9 +30,9 @@ func NewPatientController(service service.PatientService) *PatientController {
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {array} dto.PatientResponse
-// @Failure 401 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /patients [get]
 func (p *PatientController) GetPatients(c *gin.Context) {
 	hospitalIDStr, exists := c.Get("hospitalId")
@@ -64,9 +64,9 @@ func (p *PatientController) GetPatients(c *gin.Context) {
 // @Security BearerAuth
 // @Param request body dto.CreatePatientRequest true "Patient details"
 // @Success 201 {object} dto.PatientResponse
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /patients [post]
 func (p *PatientController) CreatePatient(c *gin.Context) {
 	var req dto.CreatePatientRequest
@@ -134,9 +134,9 @@ func (p *PatientController) CreatePatient(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path string true "Patient identifier (nationalId or passportId)"
 // @Success 200 {object} dto.PatientResponse
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Failure 404 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
 // @Router /patients/{id} [get]
 func (p *PatientController) SearchPatientByID(c *gin.Context) {
 	identifier := c.Param("id")
@@ -176,8 +176,8 @@ func (p *PatientController) SearchPatientByID(c *gin.Context) {
 // @Security BearerAuth
 // @Param request body dto.SearchPatientRequest true "Search filters"
 // @Success 200 {object} dto.PaginatedPatientsResponse
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
 // @Router /patients/search [post]
 func (p *PatientController) SearchPatients(c *gin.Context) {
 	var req dto.SearchPatientRequest

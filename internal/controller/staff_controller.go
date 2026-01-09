@@ -25,7 +25,7 @@ func NewStaffController(service service.StaffService) *StaffController {
 // @Accept json
 // @Produce json
 // @Success 200 {array} dto.StaffResponse
-// @Failure 500 {object} map[string]string
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /staff [get]
 func (s *StaffController) GetStaffs(c *gin.Context) {
 	staffs, err := s.service.GetStaffs()
@@ -44,8 +44,8 @@ func (s *StaffController) GetStaffs(c *gin.Context) {
 // @Produce json
 // @Param request body dto.CreateStaffRequest true "Staff creation details"
 // @Success 201 {object} dto.StaffResponse
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /staff/create [post]
 func (s *StaffController) CreateStaff(c *gin.Context) {
 	var req dto.CreateStaffRequest
@@ -80,19 +80,8 @@ func (s *StaffController) CreateStaff(c *gin.Context) {
 // @Produce json
 // @Param credentials body dto.LoginStaffRequest true "Login credentials"
 // @Success 200 {object} dto.StaffLoginResponse
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Router /staff/login [post]
-// Login godoc
-// @Summary Staff login
-// @Description Authenticate staff and receive JWT token
-// @Tags staffs
-// @Accept json
-// @Produce json
-// @Param credentials body dto.LoginStaffRequest true "Login credentials"
-// @Success 200 {object} dto.StaffLoginResponse
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
 // @Router /staff/login [post]
 func (s *StaffController) Login(c *gin.Context) {
 	var req dto.LoginStaffRequest
@@ -123,9 +112,9 @@ func (s *StaffController) Login(c *gin.Context) {
 // @Param id path string true "Staff ID (UUID)"
 // @Param request body dto.UpdateStaffRequest true "Updated staff details"
 // @Success 200 {object} dto.StaffResponse
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /staff/{id} [put]
 func (s *StaffController) UpdateStaff(c *gin.Context) {
 	idParam := c.Param("id")
@@ -165,8 +154,8 @@ func (s *StaffController) UpdateStaff(c *gin.Context) {
 // @Produce json
 // @Param id path string true "Staff ID (UUID)"
 // @Success 204
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /staff/{id} [delete]
 func (s *StaffController) DeleteStaff(c *gin.Context) {
 	idParam := c.Param("id")
