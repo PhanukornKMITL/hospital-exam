@@ -14,7 +14,6 @@ func SetupHospitalRoutes(r *gin.Engine, db *gorm.DB) {
 	hospitalService := service.NewHospitalService(hospitalRepo)
 	hospitalController := controller.NewHospitalController(hospitalService)
 
-	// Routes ของ hospital
 	r.GET("/hospital", hospitalController.GetHospitals)
 	r.POST("/hospital", hospitalController.CreateHospital)
 }

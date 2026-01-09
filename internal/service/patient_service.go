@@ -57,6 +57,11 @@ func (s *patientService) CreatePatient(input PatientCreateInput) (*entity.Patien
 	// Log hospitalId from token for debugging
 	println("[DEBUG] CreatePatient - HospitalID from token:", input.HospitalID.String())
 
+	// Validate gender - must be 'M' or 'F'
+	if input.Gender != "M" && input.Gender != "F" {
+		return nil, errors.New("gender must be either 'M' or 'F'")
+	}
+
 	// Check duplicate national ID in the same hospital
 	if input.NationalID != "" && strings.TrimSpace(input.NationalID) != "" {
 		exists, err := s.repo.ExistsByNationalIDInHospital(input.HospitalID, strings.TrimSpace(input.NationalID))

@@ -12,22 +12,23 @@ type Patient struct {
 
 	PatientHN string `gorm:"not null"`
 
-	FirstNameTH  string
+	FirstNameTH  string `gorm:"not null"`
 	MiddleNameTH string
-	LastNameTH   string
+	LastNameTH   string `gorm:"not null"`
 
-	FirstNameEN  string
+	FirstNameEN  string `gorm:"not null"`
 	MiddleNameEN string
-	LastNameEN   string
+	LastNameEN   string `gorm:"not null"`
 
-	DateOfBirth *time.Time
+	DateOfBirth *time.Time `gorm:"not null"`
 
 	NationalID *string
 	PassportID *string
 
 	PhoneNumber string
 	Email       string
-	Gender      string
+	Gender      string `gorm:"type:varchar(1);not null;check:gender IN ('M', 'F')"`
 
 	CreatedAt time.Time
+	UpdatedAt time.Time
 }

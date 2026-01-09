@@ -22,7 +22,7 @@ type CreatePatientRequest struct {
 	PassportID  string `json:"passportId"`
 	PhoneNumber string `json:"phoneNumber" binding:"required"`
 	Email       string `json:"email"`
-	Gender      string `json:"gender" binding:"required"`
+	Gender      string `json:"gender" binding:"required,oneof=M F"`
 }
 
 // PatientResponse represents patient data returned to clients.

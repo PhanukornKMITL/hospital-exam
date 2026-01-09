@@ -26,7 +26,7 @@ func NewStaffController(service service.StaffService) *StaffController {
 // @Produce json
 // @Success 200 {array} dto.StaffResponse
 // @Failure 500 {object} map[string]string
-// @Router /staffs [get]
+// @Router /staff [get]
 func (s *StaffController) GetStaffs(c *gin.Context) {
 	staffs, err := s.service.GetStaffs()
 	if err != nil {
@@ -46,7 +46,7 @@ func (s *StaffController) GetStaffs(c *gin.Context) {
 // @Success 201 {object} dto.StaffResponse
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /staffs [post]
+// @Router /staff/create [post]
 func (s *StaffController) CreateStaff(c *gin.Context) {
 	var req dto.CreateStaffRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -75,14 +75,14 @@ func (s *StaffController) CreateStaff(c *gin.Context) {
 // Login godoc
 // @Summary Staff login
 // @Description Authenticate staff and receive JWT token
-// @Tags auth
+// @Tags staffs
 // @Accept json
 // @Produce json
 // @Param credentials body dto.LoginStaffRequest true "Login credentials"
 // @Success 200 {object} dto.StaffLoginResponse
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
-// @Router /staffs/login [post]
+// @Router /staff/login [post]
 func (s *StaffController) Login(c *gin.Context) {
 	var req dto.LoginStaffRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -91,18 +91,18 @@ func (s *StaffController) Login(c *gin.Context) {
 	}
 
 	token, err := s.service.Login(service.StaffLoginInput{
-		Username:   req.Username,
-// DeleteStaff godoc
-// @Summary Delete a staff
-// @Description Delete staff member by ID
-// @Tags staffs
-// @Accept json
-// @Produce json
-// @Param id path string true "Staff ID (UUID)"
-// @Success 204
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /staffs/{id} [delete]
+		Username: req.Username,
+		// DeleteStaff godoc
+		// @Summary Delete a staff
+		// @Description Delete staff member by ID
+		// @Tags staffs
+		// @Accept json
+		// @Produce json
+		// @Param id path string true "Staff ID (UUID)"
+		// @Success 204
+		// @Failure 400 {object} map[string]string
+		// @Failure 500 {object} map[string]string
+		// @Router /staffs/{id} [delete]
 		Password:   req.Password,
 		HospitalID: req.HospitalID,
 	})

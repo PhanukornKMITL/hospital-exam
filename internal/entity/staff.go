@@ -11,6 +11,6 @@ type Staff struct {
 	Username   string    `gorm:"not null"`
 	Password   string    `gorm:"not null"`
 	HospitalID uuid.UUID `gorm:"type:uuid;not null"`
-
 	CreatedAt time.Time
+	UpdatedAt time.Time
 }
