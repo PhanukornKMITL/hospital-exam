@@ -27,6 +27,13 @@ func (m *MockStaffRepository) FindAll() ([]entity.Staff, error) {
 	return staffs, nil
 }
 
+func (m *MockStaffRepository) FindByID(id uuid.UUID) (*entity.Staff, error) {
+	if s, ok := m.staffs[id.String()]; ok {
+		return s, nil
+	}
+	return nil, nil
+}
+
 func (m *MockStaffRepository) FindByUsername(username string) (*entity.Staff, error) {
 	for _, s := range m.staffs {
 		if s.Username == username {
@@ -49,14 +56,22 @@ func (m *MockStaffRepository) Create(staff *entity.Staff) (*entity.Staff, error)
 	if m.staffs == nil {
 		m.staffs = make(map[string]*entity.Staff)
 	}
-	
+
 	// สร้าง ID ให้ staff (เหมือน database auto-generate)
 	if staff.ID == uuid.Nil {
 		staff.ID = uuid.New()
 	}
-	
+
 	m.staffs[staff.ID.String()] = staff
 	return staff, nil
+}
+
+func (m *MockStaffRepository) Update(staff *entity.Staff) (*entity.Staff, error) {
+	if _, ok := m.staffs[staff.ID.String()]; ok {
+		m.staffs[staff.ID.String()] = staff
+		return staff, nil
+	}
+	return nil, nil
 }
 
 func (m *MockStaffRepository) DeleteByID(id uuid.UUID) error {

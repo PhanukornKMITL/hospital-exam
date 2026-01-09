@@ -9,9 +9,11 @@ import (
 
 type StaffRepository interface {
 	FindAll() ([]entity.Staff, error)
+	FindByID(id uuid.UUID) (*entity.Staff, error)
 	FindByUsername(username string) (*entity.Staff, error)
 	FindByHospitalAndUsername(hospitalID uuid.UUID, username string) (*entity.Staff, error)
 	Create(staff *entity.Staff) (*entity.Staff, error)
+	Update(staff *entity.Staff) (*entity.Staff, error)
 	DeleteByID(id uuid.UUID) error
 	ExistsByUsernameInHospital(hospitalID uuid.UUID, username string) (bool, error)
 }
@@ -28,6 +30,14 @@ func (r *staffRepository) FindAll() ([]entity.Staff, error) {
 	var staffs []entity.Staff
 	err := r.db.Find(&staffs).Error
 	return staffs, err
+}
+
+func (r *staffRepository) FindByID(id uuid.UUID) (*entity.Staff, error) {
+	var staff entity.Staff
+	if err := r.db.First(&staff, "id = ?", id).Error; err != nil {
+		return nil, err
+	}
+	return &staff, nil
 }
 
 func (r *staffRepository) FindByUsername(username string) (*entity.Staff, error) {
@@ -48,6 +58,11 @@ func (r *staffRepository) FindByHospitalAndUsername(hospitalID uuid.UUID, userna
 
 func (r *staffRepository) Create(staff *entity.Staff) (*entity.Staff, error) {
 	err := r.db.Create(staff).Error
+	return staff, err
+}
+
+func (r *staffRepository) Update(staff *entity.Staff) (*entity.Staff, error) {
+	err := r.db.Save(staff).Error
 	return staff, err
 }
 

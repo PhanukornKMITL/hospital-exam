@@ -16,6 +16,7 @@ import (
 type StaffService interface {
 	GetStaffs() ([]entity.Staff, error)
 	CreateStaff(input StaffCreateInput) (*entity.Staff, error)
+	UpdateStaff(id uuid.UUID, input StaffUpdateInput) (*entity.Staff, error)
 	DeleteStaff(id uuid.UUID) error
 	Login(input StaffLoginInput) (string, error)
 }
@@ -28,6 +29,11 @@ type StaffCreateInput struct {
 	Username   string
 	Password   string
 	HospitalID uuid.UUID
+}
+
+type StaffUpdateInput struct {
+	Username string
+	Password string
 }
 
 type StaffLoginInput struct {
@@ -69,6 +75,41 @@ func (s *staffService) CreateStaff(input StaffCreateInput) (*entity.Staff, error
 		HospitalID: input.HospitalID,
 	}
 	return s.repo.Create(staff)
+}
+
+func (s *staffService) UpdateStaff(id uuid.UUID, input StaffUpdateInput) (*entity.Staff, error) {
+	if strings.TrimSpace(input.Username) == "" {
+		return nil, errors.New("username is required")
+	}
+
+	staff, err := s.repo.FindByID(id)
+	if err != nil || staff == nil {
+		return nil, errors.New("staff not found")
+	}
+
+	// Check username uniqueness within hospital if username changed
+	if staff.Username != input.Username {
+		exists, err := s.repo.ExistsByUsernameInHospital(staff.HospitalID, input.Username)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, errors.New("username already exists in this hospital")
+		}
+	}
+
+	staff.Username = input.Username
+
+	// Only update password if provided
+	if strings.TrimSpace(input.Password) != "" {
+		hashed, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, err
+		}
+		staff.Password = string(hashed)
+	}
+
+	return s.repo.Update(staff)
 }
 
 func (s *staffService) DeleteStaff(id uuid.UUID) error {

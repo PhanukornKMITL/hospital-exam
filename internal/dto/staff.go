@@ -1,35 +1,41 @@
 package dto
 
 import (
-    "time"
+	"time"
 
-    "github.com/google/uuid"
+	"github.com/google/uuid"
 )
 
 // CreateStaffRequest defines input payload for creating a staff.
 type CreateStaffRequest struct {
-    Username   string    `json:"username" binding:"required"`
-    Password   string    `json:"password" binding:"required"`
-    ConfirmPassword string `json:"confirmPassword" binding:"required"`
-    HospitalID uuid.UUID `json:"hospitalId" binding:"required"`
+	Username        string    `json:"username" binding:"required"`
+	Password        string    `json:"password" binding:"required"`
+	ConfirmPassword string    `json:"confirmPassword" binding:"required"`
+	HospitalID      uuid.UUID `json:"hospitalId" binding:"required"`
+}
+
+// UpdateStaffRequest defines input payload for updating a staff.
+type UpdateStaffRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password"` // Optional - only update if provided
 }
 
 // LoginStaffRequest defines input for staff login.
 type LoginStaffRequest struct {
-    Username   string    `json:"username" binding:"required"`
-    Password   string    `json:"password" binding:"required"`
-    HospitalID uuid.UUID `json:"hospitalId" binding:"required"`
+	Username   string    `json:"username" binding:"required"`
+	Password   string    `json:"password" binding:"required"`
+	HospitalID uuid.UUID `json:"hospitalId" binding:"required"`
 }
 
 // StaffResponse represents staff data returned to clients.
 type StaffResponse struct {
-    ID         uuid.UUID `json:"id"`
-    Username   string    `json:"username"`
-    HospitalID uuid.UUID `json:"hospitalId"`
-    CreatedAt  time.Time `json:"createdAt"`
+	ID         uuid.UUID `json:"id"`
+	Username   string    `json:"username"`
+	HospitalID uuid.UUID `json:"hospitalId"`
+	CreatedAt  time.Time `json:"createdAt"`
 }
 
 // StaffLoginResponse represents JWT token response.
 type StaffLoginResponse struct {
-    Token string `json:"token"`
+	Token string `json:"token"`
 }

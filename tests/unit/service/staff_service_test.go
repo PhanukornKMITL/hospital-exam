@@ -56,7 +56,7 @@ func TestCreateStaffSuccess(t *testing.T) {
 
 // Test 2: Create staff with duplicate username should fail
 func TestCreateStaffDuplicateUsername(t *testing.T) {
-	
+
 	mockRepo := mocks.NewMockStaffRepository()
 	svc := service.NewStaffService(mockRepo)
 
@@ -145,7 +145,7 @@ func TestCreateStaffEmptyUsername(t *testing.T) {
 
 // Test 5: Delete staff successfully
 func TestDeleteStaffSuccess(t *testing.T) {
-	
+
 	mockRepo := mocks.NewMockStaffRepository()
 	svc := service.NewStaffService(mockRepo)
 
@@ -169,4 +169,173 @@ func TestDeleteStaffSuccess(t *testing.T) {
 		t.Errorf("After delete, GetStaffs() returned %d staffs, want 0", len(staffs))
 	}
 	t.Logf("no staff left")
+}
+
+// Test 6: Update staff username successfully
+func TestUpdateStaffUsernameSuccess(t *testing.T) {
+	mockRepo := mocks.NewMockStaffRepository()
+	svc := service.NewStaffService(mockRepo)
+
+	hospitalID := uuid.New()
+	createInput := service.StaffCreateInput{
+		Username:   "oldusername",
+		Password:   "password123",
+		HospitalID: hospitalID,
+	}
+
+	staff, err := svc.CreateStaff(createInput)
+	if err != nil {
+		t.Fatalf("CreateStaff() failed: %v", err)
+	}
+
+	updateInput := service.StaffUpdateInput{
+		Username: "newusername",
+		Password: "",
+	}
+
+	result, err := svc.UpdateStaff(staff.ID, updateInput)
+
+	if err != nil {
+		t.Errorf("UpdateStaff() error = %v, want nil", err)
+	}
+
+	if result == nil {
+		t.Fatal("UpdateStaff() returned nil staff")
+	}
+
+	if result.Username != updateInput.Username {
+		t.Errorf("Username = %v, want %v", result.Username, updateInput.Username)
+	}
+}
+
+// Test 7: Update staff password successfully
+func TestUpdateStaffPasswordSuccess(t *testing.T) {
+	mockRepo := mocks.NewMockStaffRepository()
+	svc := service.NewStaffService(mockRepo)
+
+	hospitalID := uuid.New()
+	createInput := service.StaffCreateInput{
+		Username:   "testuser",
+		Password:   "oldpassword",
+		HospitalID: hospitalID,
+	}
+
+	staff, _ := svc.CreateStaff(createInput)
+	oldPassword := staff.Password
+
+	updateInput := service.StaffUpdateInput{
+		Username: "testuser",
+		Password: "newpassword",
+	}
+
+	result, err := svc.UpdateStaff(staff.ID, updateInput)
+
+	if err != nil {
+		t.Errorf("UpdateStaff() error = %v, want nil", err)
+	}
+
+	if result.Password == oldPassword {
+		t.Error("Password should be updated and rehashed")
+	}
+}
+
+// Test 8: Update staff with empty username should return error
+func TestUpdateStaffWithEmptyUsername(t *testing.T) {
+	mockRepo := mocks.NewMockStaffRepository()
+	svc := service.NewStaffService(mockRepo)
+
+	hospitalID := uuid.New()
+	createInput := service.StaffCreateInput{
+		Username:   "testuser",
+		Password:   "password123",
+		HospitalID: hospitalID,
+	}
+
+	staff, _ := svc.CreateStaff(createInput)
+
+	updateInput := service.StaffUpdateInput{
+		Username: "",
+		Password: "",
+	}
+
+	result, err := svc.UpdateStaff(staff.ID, updateInput)
+
+	if err == nil {
+		t.Error("UpdateStaff() with empty username should return error, but got nil")
+	}
+
+	if err != nil && err.Error() != "username is required" {
+		t.Errorf("Error message = %v, want 'username is required'", err.Error())
+	}
+
+	if result != nil {
+		t.Error("UpdateStaff() should return nil when error occurs")
+	}
+}
+
+// Test 9: Update non-existent staff should return error
+func TestUpdateStaffNotFound(t *testing.T) {
+	mockRepo := mocks.NewMockStaffRepository()
+	svc := service.NewStaffService(mockRepo)
+
+	nonExistentID := uuid.New()
+	updateInput := service.StaffUpdateInput{
+		Username: "newusername",
+		Password: "",
+	}
+
+	result, err := svc.UpdateStaff(nonExistentID, updateInput)
+
+	if err == nil {
+		t.Error("UpdateStaff() with non-existent ID should return error, but got nil")
+	}
+
+	if err != nil && err.Error() != "staff not found" {
+		t.Errorf("Error message = %v, want 'staff not found'", err.Error())
+	}
+
+	if result != nil {
+		t.Error("UpdateStaff() should return nil when staff not found")
+	}
+}
+
+// Test 10: Update staff with duplicate username in same hospital should fail
+func TestUpdateStaffDuplicateUsername(t *testing.T) {
+	mockRepo := mocks.NewMockStaffRepository()
+	svc := service.NewStaffService(mockRepo)
+
+	hospitalID := uuid.New()
+
+	input1 := service.StaffCreateInput{
+		Username:   "user1",
+		Password:   "password123",
+		HospitalID: hospitalID,
+	}
+	input2 := service.StaffCreateInput{
+		Username:   "user2",
+		Password:   "password456",
+		HospitalID: hospitalID,
+	}
+
+	svc.CreateStaff(input1)
+	staff2, _ := svc.CreateStaff(input2)
+
+	updateInput := service.StaffUpdateInput{
+		Username: "user1",
+		Password: "",
+	}
+
+	result, err := svc.UpdateStaff(staff2.ID, updateInput)
+
+	if err == nil {
+		t.Error("UpdateStaff() with duplicate username should return error, but got nil")
+	}
+
+	if err != nil && err.Error() != "username already exists in this hospital" {
+		t.Errorf("Error message = %v, want 'username already exists in this hospital'", err.Error())
+	}
+
+	if result != nil {
+		t.Error("UpdateStaff() should return nil when username conflicts")
+	}
 }

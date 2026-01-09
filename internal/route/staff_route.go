@@ -18,5 +18,6 @@ func SetupStaffRoutes(r *gin.Engine, db *gorm.DB) {
 	r.GET("/staff", staffController.GetStaffs)
 	r.POST("/staff/create", staffController.CreateStaff)
 	r.POST("/staff/login", staffController.Login)
+	r.PUT("/staff/:id", staffController.UpdateStaff)
 	r.DELETE("/staff/:id", staffController.DeleteStaff)
 }

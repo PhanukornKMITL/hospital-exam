@@ -83,6 +83,17 @@ func (s *StaffController) CreateStaff(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Router /staff/login [post]
+// Login godoc
+// @Summary Staff login
+// @Description Authenticate staff and receive JWT token
+// @Tags staffs
+// @Accept json
+// @Produce json
+// @Param credentials body dto.LoginStaffRequest true "Login credentials"
+// @Success 200 {object} dto.StaffLoginResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /staff/login [post]
 func (s *StaffController) Login(c *gin.Context) {
 	var req dto.LoginStaffRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -91,18 +102,7 @@ func (s *StaffController) Login(c *gin.Context) {
 	}
 
 	token, err := s.service.Login(service.StaffLoginInput{
-		Username: req.Username,
-		// DeleteStaff godoc
-		// @Summary Delete a staff
-		// @Description Delete staff member by ID
-		// @Tags staffs
-		// @Accept json
-		// @Produce json
-		// @Param id path string true "Staff ID (UUID)"
-		// @Success 204
-		// @Failure 400 {object} map[string]string
-		// @Failure 500 {object} map[string]string
-		// @Router /staffs/{id} [delete]
+		Username:   req.Username,
 		Password:   req.Password,
 		HospitalID: req.HospitalID,
 	})
@@ -114,6 +114,60 @@ func (s *StaffController) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.StaffLoginResponse{Token: token})
 }
 
+// UpdateStaff godoc
+// @Summary Update a staff member
+// @Description Update staff information by ID
+// @Tags staffs
+// @Accept json
+// @Produce json
+// @Param id path string true "Staff ID (UUID)"
+// @Param request body dto.UpdateStaffRequest true "Updated staff details"
+// @Success 200 {object} dto.StaffResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /staff/{id} [put]
+func (s *StaffController) UpdateStaff(c *gin.Context) {
+	idParam := c.Param("id")
+	staffID, err := uuid.Parse(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid staff id"})
+		return
+	}
+
+	var req dto.UpdateStaffRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	staff, err := s.service.UpdateStaff(staffID, service.StaffUpdateInput{
+		Username: req.Username,
+		Password: req.Password,
+	})
+	if err != nil {
+		if err.Error() == "staff not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, toStaffResponse(*staff))
+}
+
+// DeleteStaff godoc
+// @Summary Delete a staff
+// @Description Delete staff member by ID
+// @Tags staffs
+// @Accept json
+// @Produce json
+// @Param id path string true "Staff ID (UUID)"
+// @Success 204
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /staff/{id} [delete]
 func (s *StaffController) DeleteStaff(c *gin.Context) {
 	idParam := c.Param("id")
 	staffID, err := uuid.Parse(idParam)
