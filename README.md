@@ -20,6 +20,7 @@
 ```bash
 git clone https://github.com/PhanukornKMITL/hospital-exam.git
 cd hospital-exam
+git checkout dev
 ```
 
 2. **Start all services**
