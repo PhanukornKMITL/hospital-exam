@@ -20,7 +20,7 @@ FROM alpine:latest
 
 WORKDIR /app
 
-RUN apk add --no-cache tzdata
+RUN apk add --no-cache tzdata wget
 ENV TZ=Asia/Bangkok
 
 COPY --from=builder /app/app .
