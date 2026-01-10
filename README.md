@@ -28,37 +28,40 @@ docker-compose up -d
 ```
 
 3. **Access the API**
-- HTTP (localhost): `http://localhost`
-- Swagger UI: `http://localhost/swagger/index.html`
+- HTTP: `http://localhost` or `http://hospital-a.api.co.th`
+- HTTPS: `https://localhost` or `https://hospital-a.api.co.th`
+- Swagger UI: `http://localhost/swagger/index.html` or `http://hospital-a.api.co.th/swagger/index.html`
 
-**That's it!** ✅ No additional setup required for localhost testing.
+> 📝 **Note:** 
+> - SSL certificates are automatically generated on first run for both domains
+> - To use `hospital-a.api.co.th`, add it to your hosts file (see Optional section below)
+> - No manual SSL setup required!
 
 ---
 
-### 🔒 Optional: HTTPS with Custom Domain
+### 🌐 Optional: Use Custom Domain
 
-If you want to use HTTPS with a custom domain (`https://hospital-a.api.co.th`):
+If you want to access via custom domain (`hospital-a.api.co.th`) instead of localhost:
 
-1. **Generate SSL certificate**
-```bash
-./generate-ssl.sh
-```
-
-2. **Add domain to hosts file**
+**For Linux/macOS:**
 ```bash
 echo "127.0.0.1 hospital-a.api.co.th" | sudo tee -a /etc/hosts
 ```
 
-3. **Restart services**
-```bash
-docker-compose restart
+**For Windows:**
+1. Open PowerShell **as Administrator** (Right-click → Run as Administrator)
+2. Run this command:
+```powershell
+Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "127.0.0.1 hospital-a.api.co.th"
 ```
 
-4. **Access via HTTPS**
+> **Important:** You MUST run PowerShell as Administrator, otherwise you'll get "Access Denied" error.
+
+**Then access via:**
 - HTTPS: `https://hospital-a.api.co.th`
 - Swagger: `https://hospital-a.api.co.th/swagger/index.html`
 
-> **Note:** Browser will show SSL warning for self-signed certificate. Click "Proceed" to continue.
+> 📝 **Note:** The auto-generated SSL certificate already supports both localhost and hospital-a.api.co.th.
 
 ---
 
@@ -113,6 +116,31 @@ docker logs hospital-postgres
 ```bash
 docker-compose up -d --build
 ```
+
+### 🔄 Clean Reset (Fresh Install)
+To completely reset the project as if it's a fresh installation:
+
+**For Linux/macOS:**
+```bash
+# Stop and remove all containers, volumes, and generated files
+docker-compose down -v
+rm -rf ssl/*
+docker-compose up -d
+```
+
+**For Windows (PowerShell):**
+```powershell
+# Stop and remove all containers, volumes, and generated files
+docker-compose down -v
+Remove-Item -Path "ssl\*" -Force -ErrorAction SilentlyContinue
+docker-compose up -d
+```
+
+> **What this does:**
+> - Stops and removes all Docker containers
+> - Deletes all database data (volumes)
+> - Removes any generated SSL certificates
+> - Restarts with fresh state (auto-generates dummy SSL)
 
 ## 📦 Services
 - **API**: Go (Gin framework) - Internal port 8080
