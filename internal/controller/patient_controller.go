@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 
 	"github.com/PhanukornKMITL/hospital-exam/internal/dto"
@@ -71,6 +72,15 @@ func (p *PatientController) GetPatients(c *gin.Context) {
 func (p *PatientController) CreatePatient(c *gin.Context) {
 	var req dto.CreatePatientRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		// Map validation errors to friendly messages
+		if verrs, ok := err.(validator.ValidationErrors); ok {
+			for _, v := range verrs {
+				if v.Field() == "Gender" && v.Tag() == "oneof" {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "gender should be M of F"})
+					return
+				}
+			}
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -125,6 +135,92 @@ func (p *PatientController) CreatePatient(c *gin.Context) {
 	c.JSON(http.StatusCreated, toPatientResponse(*patient))
 }
 
+// UpdatePatient godoc
+// @Summary Update patient in hospital
+// @Description Update patient details within the authenticated staff's hospital
+// @Tags patients
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Patient ID (UUID)"
+// @Param request body dto.UpdatePatientRequest true "Patient details"
+// @Success 200 {object} dto.PatientResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /patient/{id} [put]
+func (p *PatientController) UpdatePatient(c *gin.Context) {
+	patientID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid patient id"})
+		return
+	}
+
+	var req dto.UpdatePatientRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if allNilUpdateFields(req) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "at least one field must be provided"})
+		return
+	}
+
+	staffHospitalIDStr, exists := c.Get("hospitalId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "hospitalId not found in token"})
+		return
+	}
+
+	staffHospitalID, err := uuid.Parse(staffHospitalIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hospitalId format in token"})
+		return
+	}
+
+	var dob *time.Time
+	if req.DateOfBirth != nil && *req.DateOfBirth != "" {
+		parsed, err := parseFlexibleDate(*req.DateOfBirth)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid dateOfBirth format, expected YYYY-MM-DD or RFC3339"})
+			return
+		}
+		dob = &parsed
+	}
+
+	patient, err := p.service.UpdatePatient(staffHospitalID, patientID, service.PatientUpdateInput{
+		FirstNameTH:  req.FirstNameTH,
+		MiddleNameTH: req.MiddleNameTH,
+		LastNameTH:   req.LastNameTH,
+		FirstNameEN:  req.FirstNameEN,
+		MiddleNameEN: req.MiddleNameEN,
+		LastNameEN:   req.LastNameEN,
+		DateOfBirth:  dob,
+		NationalID:   req.NationalID,
+		PassportID:   req.PassportID,
+		PhoneNumber:  req.PhoneNumber,
+		Email:        req.Email,
+		Gender:       req.Gender,
+	})
+	if err != nil {
+		switch err.Error() {
+		case "patient not found":
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		case "gender must be either 'M' or 'F'", "either nationalId or passportId must be provided", "nationalId already exists in this hospital", "passportId already exists in this hospital":
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, toPatientResponse(*patient))
+}
+
 // SearchPatient godoc
 // @Summary Search patient by identifier (nationalId or passportId)
 // @Description Retrieve patient by identifier only within the authenticated staff's hospital (no cross-hospital access)
@@ -137,7 +233,7 @@ func (p *PatientController) CreatePatient(c *gin.Context) {
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 404 {object} dto.ErrorResponse
-// @Router /patient/{id} [get]
+// @Router /patient/search/{id} [get]
 func (p *PatientController) SearchPatientByID(c *gin.Context) {
 	identifier := c.Param("id")
 
@@ -240,6 +336,53 @@ func (p *PatientController) SearchPatients(c *gin.Context) {
 	})
 }
 
+// DeletePatient godoc
+// @Summary Delete patient in hospital
+// @Description Delete patient within the authenticated staff's hospital
+// @Tags patients
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Patient ID (UUID)"
+// @Success 204
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /patient/{id} [delete]
+func (p *PatientController) DeletePatient(c *gin.Context) {
+	patientID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid patient id"})
+		return
+	}
+
+	staffHospitalIDStr, exists := c.Get("hospitalId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "hospitalId not found in token"})
+		return
+	}
+
+	staffHospitalID, err := uuid.Parse(staffHospitalIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid hospitalId format in token"})
+		return
+	}
+
+	if err := p.service.DeletePatient(staffHospitalID, patientID); err != nil {
+		switch err.Error() {
+		case "patient not found":
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 func toPatientResponse(p entity.Patient) dto.PatientResponse {
 	return dto.PatientResponse{
 		ID:           p.ID,
@@ -259,6 +402,30 @@ func toPatientResponse(p entity.Patient) dto.PatientResponse {
 		Gender:       p.Gender,
 		CreatedAt:    p.CreatedAt,
 	}
+}
+
+// allNilUpdateFields checks if no update fields are provided.
+func allNilUpdateFields(req dto.UpdatePatientRequest) bool {
+	return req.FirstNameTH == nil &&
+		req.MiddleNameTH == nil &&
+		req.LastNameTH == nil &&
+		req.FirstNameEN == nil &&
+		req.MiddleNameEN == nil &&
+		req.LastNameEN == nil &&
+		req.DateOfBirth == nil &&
+		req.NationalID == nil &&
+		req.PassportID == nil &&
+		req.PhoneNumber == nil &&
+		req.Email == nil &&
+		req.Gender == nil
+}
+
+// parseFlexibleDate accepts YYYY-MM-DD or RFC3339 datetime strings.
+func parseFlexibleDate(input string) (time.Time, error) {
+	if t, err := time.Parse("2006-01-02", input); err == nil {
+		return t, nil
+	}
+	return time.Parse(time.RFC3339, input)
 }
 
 func derefString(s *string) string {

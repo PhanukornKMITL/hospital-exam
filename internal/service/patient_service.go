@@ -16,6 +16,8 @@ type PatientService interface {
 	CreatePatient(input PatientCreateInput) (*entity.Patient, error)
 	SearchPatientByID(hospitalID uuid.UUID, identifier string) (*entity.Patient, error)
 	SearchPatients(hospitalID uuid.UUID, input PatientSearchInput, page, limit int) ([]entity.Patient, int64, error)
+	UpdatePatient(hospitalID, patientID uuid.UUID, input PatientUpdateInput) (*entity.Patient, error)
+	DeletePatient(hospitalID, patientID uuid.UUID) error
 }
 
 type patientService struct {
@@ -39,6 +41,24 @@ type PatientCreateInput struct {
 	PhoneNumber string
 	Email       string
 	Gender      string
+}
+
+type PatientUpdateInput struct {
+	FirstNameTH  *string
+	MiddleNameTH *string
+	LastNameTH   *string
+
+	FirstNameEN  *string
+	MiddleNameEN *string
+	LastNameEN   *string
+
+	DateOfBirth *time.Time
+
+	NationalID  *string
+	PassportID  *string
+	PhoneNumber *string
+	Email       *string
+	Gender      *string
 }
 
 func NewPatientService(repo repository.PatientRepository) PatientService {
@@ -164,6 +184,107 @@ func (s *patientService) SearchPatients(hospitalID uuid.UUID, input PatientSearc
 
 	patients, total, err := s.repo.FindByHospitalWithFilters(hospitalID, filters, page, limit)
 	return patients, total, err
+}
+
+func (s *patientService) UpdatePatient(hospitalID, patientID uuid.UUID, input PatientUpdateInput) (*entity.Patient, error) {
+	patient, err := s.repo.FindByHospitalAndID(hospitalID, patientID)
+	if err != nil {
+		return nil, err
+	}
+	if patient == nil {
+		return nil, errors.New("patient not found")
+	}
+
+	// Gender validation only when provided
+	if input.Gender != nil {
+		if *input.Gender != "M" && *input.Gender != "F" {
+			return nil, errors.New("gender must be either 'M' or 'F'")
+		}
+	}
+
+	// Apply field updates only if provided
+	if input.FirstNameTH != nil {
+		patient.FirstNameTH = *input.FirstNameTH
+	}
+	if input.MiddleNameTH != nil {
+		patient.MiddleNameTH = *input.MiddleNameTH
+	}
+	if input.LastNameTH != nil {
+		patient.LastNameTH = *input.LastNameTH
+	}
+	if input.FirstNameEN != nil {
+		patient.FirstNameEN = *input.FirstNameEN
+	}
+	if input.MiddleNameEN != nil {
+		patient.MiddleNameEN = *input.MiddleNameEN
+	}
+	if input.LastNameEN != nil {
+		patient.LastNameEN = *input.LastNameEN
+	}
+	if input.DateOfBirth != nil {
+		patient.DateOfBirth = input.DateOfBirth
+	}
+	if input.PhoneNumber != nil {
+		patient.PhoneNumber = *input.PhoneNumber
+	}
+	if input.Email != nil {
+		patient.Email = *input.Email
+	}
+	if input.Gender != nil {
+		patient.Gender = *input.Gender
+	}
+
+	// Handle identifiers with duplicate checks only when provided
+	if input.NationalID != nil {
+		nationalPtr := normalizeOptionalPtr(*input.NationalID)
+		if patient.NationalID == nil || (nationalPtr == nil || *patient.NationalID != *nationalPtr) {
+			if nationalPtr != nil {
+				exists, err := s.repo.ExistsByNationalIDInHospitalExcept(hospitalID, *nationalPtr, patientID)
+				if err != nil {
+					return nil, err
+				}
+				if exists {
+					return nil, errors.New("nationalId already exists in this hospital")
+				}
+			}
+		}
+		patient.NationalID = nationalPtr
+	}
+
+	if input.PassportID != nil {
+		passportPtr := normalizeOptionalPtr(*input.PassportID)
+		if patient.PassportID == nil || (passportPtr == nil || *patient.PassportID != *passportPtr) {
+			if passportPtr != nil {
+				exists, err := s.repo.ExistsByPassportIDInHospitalExcept(hospitalID, *passportPtr, patientID)
+				if err != nil {
+					return nil, err
+				}
+				if exists {
+					return nil, errors.New("passportId already exists in this hospital")
+				}
+			}
+		}
+		patient.PassportID = passportPtr
+	}
+
+	// Ensure at least one identifier remains
+	if patient.NationalID == nil && patient.PassportID == nil {
+		return nil, errors.New("either nationalId or passportId must be provided")
+	}
+
+	return s.repo.Update(patient)
+}
+
+func (s *patientService) DeletePatient(hospitalID, patientID uuid.UUID) error {
+	patient, err := s.repo.FindByHospitalAndID(hospitalID, patientID)
+	if err != nil {
+		return err
+	}
+	if patient == nil {
+		return errors.New("patient not found")
+	}
+
+	return s.repo.Delete(hospitalID, patientID)
 }
 
 // normalizeOptionalPtr trims and returns nil if empty/whitespace, else pointer.

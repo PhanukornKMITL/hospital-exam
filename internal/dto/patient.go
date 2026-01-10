@@ -25,6 +25,25 @@ type CreatePatientRequest struct {
 	Gender      string `json:"gender" binding:"required,oneof=M F"`
 }
 
+// UpdatePatientRequest allows partial updates; only provided fields will be applied.
+type UpdatePatientRequest struct {
+	FirstNameTH  *string `json:"firstNameTH"`
+	MiddleNameTH *string `json:"middleNameTH"`
+	LastNameTH   *string `json:"lastNameTH"`
+
+	FirstNameEN  *string `json:"firstNameEN"`
+	MiddleNameEN *string `json:"middleNameEN"`
+	LastNameEN   *string `json:"lastNameEN"`
+
+	DateOfBirth *string `json:"dateOfBirth" example:"1990-01-15"`
+
+	NationalID  *string `json:"nationalId"`
+	PassportID  *string `json:"passportId"`
+	PhoneNumber *string `json:"phoneNumber"`
+	Email       *string `json:"email"`
+	Gender      *string `json:"gender"`
+}
+
 // PatientResponse represents patient data returned to clients.
 type PatientResponse struct {
 	ID         uuid.UUID `json:"id"`

@@ -78,6 +78,15 @@ func (m *MockPatientRepository) FindByHospitalAndIdentifier(hospitalID uuid.UUID
 	return nil, nil
 }
 
+func (m *MockPatientRepository) FindByHospitalAndID(hospitalID uuid.UUID, id uuid.UUID) (*entity.Patient, error) {
+	for _, p := range m.patients {
+		if p.HospitalID == hospitalID && p.ID == id {
+			return p, nil
+		}
+	}
+	return nil, nil
+}
+
 func (m *MockPatientRepository) ExistsByNationalIDInHospital(hospitalID uuid.UUID, nationalID string) (bool, error) {
 	for _, p := range m.patients {
 		if p.HospitalID == hospitalID && p.NationalID != nil && *p.NationalID == nationalID {
@@ -87,9 +96,27 @@ func (m *MockPatientRepository) ExistsByNationalIDInHospital(hospitalID uuid.UUI
 	return false, nil
 }
 
+func (m *MockPatientRepository) ExistsByNationalIDInHospitalExcept(hospitalID uuid.UUID, nationalID string, patientID uuid.UUID) (bool, error) {
+	for _, p := range m.patients {
+		if p.HospitalID == hospitalID && p.ID != patientID && p.NationalID != nil && *p.NationalID == nationalID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (m *MockPatientRepository) ExistsByPassportIDInHospital(hospitalID uuid.UUID, passportID string) (bool, error) {
 	for _, p := range m.patients {
 		if p.HospitalID == hospitalID && p.PassportID != nil && *p.PassportID == passportID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (m *MockPatientRepository) ExistsByPassportIDInHospitalExcept(hospitalID uuid.UUID, passportID string, patientID uuid.UUID) (bool, error) {
+	for _, p := range m.patients {
+		if p.HospitalID == hospitalID && p.ID != patientID && p.PassportID != nil && *p.PassportID == passportID {
 			return true, nil
 		}
 	}
@@ -175,6 +202,21 @@ func (m *MockPatientRepository) FindByHospitalWithFilters(hospitalID uuid.UUID, 
 	}
 
 	return results[start:end], total, nil
+}
+
+func (m *MockPatientRepository) Update(patient *entity.Patient) (*entity.Patient, error) {
+	m.patients[patient.ID.String()] = patient
+	return patient, nil
+}
+
+func (m *MockPatientRepository) Delete(hospitalID uuid.UUID, id uuid.UUID) error {
+	for key, p := range m.patients {
+		if p.HospitalID == hospitalID && p.ID == id {
+			delete(m.patients, key)
+			return nil
+		}
+	}
+	return nil
 }
 
 // sameDate compares date by YYYY-MM-DD ignoring time of day and timezone.

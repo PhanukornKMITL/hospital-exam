@@ -21,6 +21,8 @@ func SetupPatientRoutes(r *gin.Engine, db *gorm.DB) {
 	{
 		patientGroup.GET("", patientController.GetPatients)
 		patientGroup.POST("/create", patientController.CreatePatient)
+		patientGroup.PUT("/:id", patientController.UpdatePatient)
+		patientGroup.DELETE("/:id", patientController.DeletePatient)
 		patientGroup.GET("/search/:id", patientController.SearchPatientByID)
 		patientGroup.POST("/search", patientController.SearchPatients)
 	}

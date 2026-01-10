@@ -10,6 +10,8 @@ import (
 	"github.com/google/uuid"
 )
 
+func strPtr(s string) *string { return &s }
+
 // ============= TEST CASES =============
 
 // Test 1: Get all patients successfully
@@ -346,5 +348,98 @@ func TestSearchPatientByIDDifferentHospital(t *testing.T) {
 
 	if result != nil {
 		t.Errorf("SearchPatientByID() should return nil when hospital mismatched, got %v", result.ID)
+	}
+}
+
+// Test 11: Update patient successfully
+func TestUpdatePatientSuccess(t *testing.T) {
+	mockRepo := mocks.NewMockPatientRepository()
+	svc := service.NewPatientService(mockRepo)
+
+	hospitalID := uuid.New()
+	dob := time.Date(1992, 3, 10, 0, 0, 0, 0, time.UTC)
+	nationalID := "1111111111111"
+
+	patient := &entity.Patient{
+		ID:          uuid.New(),
+		HospitalID:  hospitalID,
+		FirstNameTH: "เดิม",
+		LastNameTH:  "เดิม",
+		FirstNameEN: "Old",
+		LastNameEN:  "Name",
+		DateOfBirth: &dob,
+		NationalID:  &nationalID,
+		Gender:      "M",
+	}
+	mockRepo.Create(patient)
+
+	newDob := time.Date(1993, 4, 11, 0, 0, 0, 0, time.UTC)
+	updated, err := svc.UpdatePatient(hospitalID, patient.ID, service.PatientUpdateInput{
+		FirstNameTH: strPtr("ใหม่"),
+		LastNameTH:  strPtr("ล่าสุด"),
+		FirstNameEN: strPtr("New"),
+		LastNameEN:  strPtr("Latest"),
+		DateOfBirth: &newDob,
+		NationalID:  strPtr(nationalID),
+		PhoneNumber: strPtr("0800000000"),
+		Gender:      strPtr("M"),
+	})
+
+	if err != nil {
+		t.Fatalf("UpdatePatient() error = %v, want nil", err)
+	}
+	if updated.FirstNameTH != "ใหม่" || updated.LastNameEN != "Latest" {
+		t.Fatalf("UpdatePatient() did not update names correctly")
+	}
+	if updated.DateOfBirth == nil || !updated.DateOfBirth.Equal(newDob) {
+		t.Fatalf("UpdatePatient() DateOfBirth not updated")
+	}
+}
+
+// Test 12: Update patient with duplicate national ID should error
+func TestUpdatePatientDuplicateNationalID(t *testing.T) {
+	mockRepo := mocks.NewMockPatientRepository()
+	svc := service.NewPatientService(mockRepo)
+
+	hospitalID := uuid.New()
+	nationalA := "123"
+	nationalB := "456"
+
+	patientA := &entity.Patient{ID: uuid.New(), HospitalID: hospitalID, FirstNameTH: "A", LastNameTH: "A", FirstNameEN: "A", LastNameEN: "A", Gender: "M", NationalID: &nationalA}
+	patientB := &entity.Patient{ID: uuid.New(), HospitalID: hospitalID, FirstNameTH: "B", LastNameTH: "B", FirstNameEN: "B", LastNameEN: "B", Gender: "F", NationalID: &nationalB}
+
+	mockRepo.Create(patientA)
+	mockRepo.Create(patientB)
+
+	_, err := svc.UpdatePatient(hospitalID, patientB.ID, service.PatientUpdateInput{
+		FirstNameTH: strPtr("B"),
+		LastNameTH:  strPtr("B"),
+		FirstNameEN: strPtr("B"),
+		LastNameEN:  strPtr("B"),
+		NationalID:  strPtr(nationalA),
+		Gender:      strPtr("F"),
+	})
+
+	if err == nil {
+		t.Fatalf("expected duplicate national ID error, got nil")
+	}
+}
+
+// Test 13: Delete patient successfully
+func TestDeletePatientSuccess(t *testing.T) {
+	mockRepo := mocks.NewMockPatientRepository()
+	svc := service.NewPatientService(mockRepo)
+
+	hospitalID := uuid.New()
+	patient := &entity.Patient{ID: uuid.New(), HospitalID: hospitalID, FirstNameTH: "ลบ", LastNameTH: "ได้", FirstNameEN: "Delete", LastNameEN: "Me", Gender: "M"}
+	mockRepo.Create(patient)
+
+	if err := svc.DeletePatient(hospitalID, patient.ID); err != nil {
+		t.Fatalf("DeletePatient() error = %v, want nil", err)
+	}
+
+	res, _ := mockRepo.FindByHospitalAndID(hospitalID, patient.ID)
+	if res != nil {
+		t.Fatalf("patient should be removed after delete")
 	}
 }

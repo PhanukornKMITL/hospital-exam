@@ -18,9 +18,14 @@ type PatientRepository interface {
 	CreateWithGeneratedHN(patient *entity.Patient) (*entity.Patient, error)
 	FindByID(id uuid.UUID) (*entity.Patient, error)
 	FindByHospitalAndIdentifier(hospitalID uuid.UUID, identifier string) (*entity.Patient, error)
+	FindByHospitalAndID(hospitalID uuid.UUID, id uuid.UUID) (*entity.Patient, error)
 	ExistsByNationalIDInHospital(hospitalID uuid.UUID, nationalID string) (bool, error)
 	ExistsByPassportIDInHospital(hospitalID uuid.UUID, passportID string) (bool, error)
+	ExistsByNationalIDInHospitalExcept(hospitalID uuid.UUID, nationalID string, patientID uuid.UUID) (bool, error)
+	ExistsByPassportIDInHospitalExcept(hospitalID uuid.UUID, passportID string, patientID uuid.UUID) (bool, error)
 	FindByHospitalWithFilters(hospitalID uuid.UUID, filters PatientSearchFilters, page, limit int) ([]entity.Patient, int64, error)
+	Update(patient *entity.Patient) (*entity.Patient, error)
+	Delete(hospitalID uuid.UUID, id uuid.UUID) error
 }
 
 type patientRepository struct {
@@ -95,15 +100,40 @@ func (r *patientRepository) FindByHospitalAndIdentifier(hospitalID uuid.UUID, id
 	return &patient, nil
 }
 
+func (r *patientRepository) FindByHospitalAndID(hospitalID uuid.UUID, id uuid.UUID) (*entity.Patient, error) {
+	var patient entity.Patient
+	err := r.db.Where("hospital_id = ? AND id = ?", hospitalID, id).First(&patient).Error
+	if err != nil {
+		return nil, err
+	}
+	return &patient, nil
+}
+
 func (r *patientRepository) ExistsByNationalIDInHospital(hospitalID uuid.UUID, nationalID string) (bool, error) {
 	var count int64
 	err := r.db.Model(&entity.Patient{}).Where("hospital_id = ? AND national_id = ?", hospitalID, nationalID).Count(&count).Error
 	return count > 0, err
 }
 
+func (r *patientRepository) ExistsByNationalIDInHospitalExcept(hospitalID uuid.UUID, nationalID string, patientID uuid.UUID) (bool, error) {
+	var count int64
+	err := r.db.Model(&entity.Patient{}).
+		Where("hospital_id = ? AND national_id = ? AND id <> ?", hospitalID, nationalID, patientID).
+		Count(&count).Error
+	return count > 0, err
+}
+
 func (r *patientRepository) ExistsByPassportIDInHospital(hospitalID uuid.UUID, passportID string) (bool, error) {
 	var count int64
 	err := r.db.Model(&entity.Patient{}).Where("hospital_id = ? AND passport_id = ?", hospitalID, passportID).Count(&count).Error
+	return count > 0, err
+}
+
+func (r *patientRepository) ExistsByPassportIDInHospitalExcept(hospitalID uuid.UUID, passportID string, patientID uuid.UUID) (bool, error) {
+	var count int64
+	err := r.db.Model(&entity.Patient{}).
+		Where("hospital_id = ? AND passport_id = ? AND id <> ?", hospitalID, passportID, patientID).
+		Count(&count).Error
 	return count > 0, err
 }
 
@@ -187,4 +217,20 @@ func (r *patientRepository) FindByHospitalWithFilters(hospitalID uuid.UUID, f Pa
 	var patients []entity.Patient
 	err := base.Offset(offset).Limit(limit).Find(&patients).Error
 	return patients, total, err
+}
+
+func (r *patientRepository) Update(patient *entity.Patient) (*entity.Patient, error) {
+	err := r.db.Save(patient).Error
+	return patient, err
+}
+
+func (r *patientRepository) Delete(hospitalID uuid.UUID, id uuid.UUID) error {
+	res := r.db.Where("hospital_id = ? AND id = ?", hospitalID, id).Delete(&entity.Patient{})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
