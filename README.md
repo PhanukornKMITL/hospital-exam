@@ -28,9 +28,9 @@ docker-compose up -d
 ```
 
 3. **Access the API**
-- HTTP: `http://localhost` or `http://hospital-a.api.co.th`
-- HTTPS: `https://localhost` or `https://hospital-a.api.co.th`
-- Swagger UI: `http://localhost/swagger/index.html` or `http://hospital-a.api.co.th/swagger/index.html`
+- HTTP: `http://localhost` or `http://hospital-a.api.co.th` (Required add domain in next step)
+- HTTPS: `https://localhost` or `https://hospital-a.api.co.th` (Required add domain in next step)
+- Swagger UI: `http://localhost/swagger/index.html` or `http://hospital-a.api.co.th/swagger/index.html` (Required add domain in next step)
 
 > 📝 **Note:** 
 > - SSL certificates are automatically generated on first run for both domains
@@ -75,20 +75,25 @@ curl http://localhost/health
 ### Hospitals
 - `GET /hospital` - Get all hospitals
 - `POST /hospital` - Create hospital
+- `PUT /hospital/:id` - Update hospital
+- `DELETE /hospital/:id` - Delete hospital
 
 ### Staff
 - `GET /staff` - Get all staff
 - `POST /staff/create` - Create staff
 - `POST /staff/login` - Staff login
+- `PUT /staff/:id` - Update staff
 - `DELETE /staff/:id` - Delete staff
 
-### Patients
-- `GET /patient` - Get all patients (requires auth)
-- `POST /patient/create` - Create patient (requires auth)
-- `GET /patient/search/:id` - Search patient by ID (requires auth)
-- `POST /patient/search` - Search patients (requires auth)
+### Patients (All require auth)
+- `GET /patient` - Get all patients
+- `POST /patient/create` - Create patient
+- `PUT /patient/:id` - Update patient
+- `DELETE /patient/:id` - Delete patient
+- `GET /patient/search/:id` - Search patient by ID (national_id or passport_id)
+- `POST /patient/search` - Search patients with filters
 
-Auth header example (required for patient endpoints):
+**Auth header example (required for all patient endpoints):**
 ```bash
 curl -H "Authorization: Bearer <JWT_TOKEN>" http://localhost/patient
 ```
