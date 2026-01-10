@@ -18,7 +18,7 @@
 
 1. **Clone the repository**
 ```bash
-git clone <repository-url>
+git clone https://github.com/PhanukornKMITL/hospital-exam.git
 cd hospital-exam
 ```
 
