@@ -12,7 +12,7 @@
 
 ### Prerequisites
 - Docker & Docker Compose
-- Go 1.21+ (for development)
+- Go 1.25+ (for development)
 
 ### Setup & Run
 
